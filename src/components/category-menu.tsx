@@ -5,8 +5,9 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { brandLetter } from "@/lib/category-nav";
 import {
-  storeCategoryPath,
-  storeHome,
+  catalogCategoryPath,
+  catalogHome,
+  type CatalogMode,
   type StoreSlug,
 } from "@/lib/shops";
 
@@ -15,9 +16,11 @@ type Category = { id: string; name: string };
 export function CategoryMenu({
   store,
   categories,
+  mode = "storefront",
 }: {
   store: StoreSlug;
   categories: Category[];
+  mode?: CatalogMode;
 }) {
   const pathname = usePathname();
   const letters = [...new Set(categories.map((category) => brandLetter(category.name)))].sort(
@@ -66,7 +69,7 @@ export function CategoryMenu({
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3">
             <Link
-              href={storeHome(store)}
+              href={catalogHome(store, mode)}
               className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted"
             >
               All items
@@ -86,7 +89,7 @@ export function CategoryMenu({
                     .map((category) => (
                       <Link
                         key={category.id}
-                        href={storeCategoryPath(store, category.id)}
+                        href={catalogCategoryPath(store, category.id, mode)}
                         className="block rounded-lg px-3 py-2 text-sm hover:bg-muted"
                       >
                         {category.name}

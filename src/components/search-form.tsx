@@ -4,32 +4,50 @@ import { Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { storeSearchPath, type StoreSlug } from "@/lib/shops";
+import { catalogSearchPath, type CatalogMode, type StoreSlug } from "@/lib/shops";
 
-export function SearchForm({ store }: { store: StoreSlug }) {
+export function SearchForm({
+  store,
+  mode = "storefront",
+}: {
+  store: StoreSlug;
+  mode?: CatalogMode;
+}) {
   return (
-    <Suspense fallback={<SearchFields store={store} />}>
-      <SearchFormFromUrl store={store} />
+    <Suspense fallback={<SearchFields store={store} mode={mode} />}>
+      <SearchFormFromUrl store={store} mode={mode} />
     </Suspense>
   );
 }
 
-function SearchFormFromUrl({ store }: { store: StoreSlug }) {
+function SearchFormFromUrl({
+  store,
+  mode = "storefront",
+}: {
+  store: StoreSlug;
+  mode?: CatalogMode;
+}) {
   const params = useSearchParams();
   return (
-    <SearchFields store={store} defaultValue={params.get("q") ?? ""} />
+    <SearchFields
+      store={store}
+      mode={mode}
+      defaultValue={params.get("q") ?? ""}
+    />
   );
 }
 
 function SearchFields({
   store,
+  mode = "storefront",
   defaultValue = "",
 }: {
   store: StoreSlug;
+  mode?: CatalogMode;
   defaultValue?: string;
 }) {
   return (
-    <form action={storeSearchPath(store)} className="relative">
+    <form action={catalogSearchPath(store, mode)} className="relative">
       <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
       <Input
         name="q"

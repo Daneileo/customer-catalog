@@ -11,6 +11,8 @@ Two catalogs:
 
 Albums that exist only to share other gallery links or agent how-to posts are omitted. Item descriptions that contain marketplace or gallery URLs are stripped. Yuan / yen prices are not shown.
 
+A **master copy** at `/master` (Medved) and `/master/mishka` shows yuan prices and album links for ordering. The customer catalog is unchanged. Download the current page as CSV from the master listing.
+
 ## Run locally
 
 ```bash

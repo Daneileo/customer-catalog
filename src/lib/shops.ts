@@ -95,6 +95,48 @@ export function storeCategoryPath(store: StoreSlug, categoryId: string) {
   return `${storeBasePath(store)}/c/${categoryId}`;
 }
 
+export type CatalogMode = "storefront" | "master";
+
+export function catalogHome(
+  store: StoreSlug,
+  mode: CatalogMode = "storefront",
+) {
+  if (mode === "master") {
+    return store === "mishka" ? "/master/mishka" : "/master";
+  }
+  return storeHome(store);
+}
+
+export function catalogSearchPath(
+  store: StoreSlug,
+  mode: CatalogMode = "storefront",
+) {
+  if (mode === "master") {
+    return store === "mishka" ? "/master/mishka/search" : "/master/search";
+  }
+  return storeSearchPath(store);
+}
+
+export function catalogCategoryPath(
+  store: StoreSlug,
+  categoryId: string,
+  mode: CatalogMode = "storefront",
+) {
+  if (mode === "master") {
+    const base = store === "mishka" ? "/master/mishka" : "/master";
+    return `${base}/c/${categoryId}`;
+  }
+  return storeCategoryPath(store, categoryId);
+}
+
+export function catalogItemPath(
+  shop: ShopSlug,
+  id: string,
+  mode: CatalogMode = "storefront",
+) {
+  return mode === "master" ? `/master/item/${shop}/${id}` : `/item/${shop}/${id}`;
+}
+
 export function whatsappLink(message: string) {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
 }

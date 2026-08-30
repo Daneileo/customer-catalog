@@ -6,8 +6,9 @@ import { usePathname } from "next/navigation";
 import { ChevronDown } from "lucide-react";
 import { brandLetter } from "@/lib/category-nav";
 import {
-  storeCategoryPath,
-  storeHome,
+  catalogCategoryPath,
+  catalogHome,
+  type CatalogMode,
   type StoreSlug,
 } from "@/lib/shops";
 import { cn } from "@/lib/utils";
@@ -17,14 +18,16 @@ type Category = { id: string; name: string };
 export function BrandNav({
   store,
   categories,
+  mode = "storefront",
 }: {
   store: StoreSlug;
   categories: Category[];
+  mode?: CatalogMode;
 }) {
   const pathname = usePathname();
   const activeId = pathname.match(/\/c\/([^/?]+)/)?.[1];
   const reactId = useId().replace(/:/g, "");
-  const popoverId = `brand-dropdown-${store}-${reactId}`;
+  const popoverId = `brand-dropdown-${mode}-${store}-${reactId}`;
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
 
@@ -118,7 +121,7 @@ export function BrandNav({
   return (
     <div className="brand-nav flex items-center gap-1">
       <Link
-        href={storeHome(store)}
+        href={catalogHome(store, mode)}
         className={cn(
           "rounded-full px-3 py-1.5 text-sm",
           !activeId && !pathname.includes("/search")
@@ -181,7 +184,7 @@ export function BrandNav({
                     {brands.map((category) => (
                       <Link
                         key={category.id}
-                        href={storeCategoryPath(store, category.id)}
+                        href={catalogCategoryPath(store, category.id, mode)}
                         data-brand-name={category.name.toLowerCase()}
                         role="option"
                         aria-selected={activeId === category.id}

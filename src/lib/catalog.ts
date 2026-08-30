@@ -7,7 +7,12 @@ import {
   type ShopSlug,
   type StoreSlug,
 } from "@/lib/shops";
-import { parseProductTitle, sanitizeCopy } from "@/lib/titles";
+import {
+  extractHttpLinks,
+  parseProductTitle,
+  restoreCopy,
+  sanitizeCopy,
+} from "@/lib/titles";
 import { restoreBrands } from "@/lib/brands";
 import { isBrandListing, sortBrandList } from "@/lib/category-nav";
 
@@ -22,6 +27,7 @@ export type CatalogItem = {
   coverSrc: string;
   price?: number;
   originalPrice?: number;
+  sourceUrl?: string;
 };
 
 export type CatalogPhoto = {
@@ -53,6 +59,10 @@ export type ItemDetail = {
   page: number;
   pageCount: number;
   photoCount: number;
+  sourceUrl: string;
+  links: string[];
+  price?: number;
+  originalPrice?: number;
 };
 
 export class CatalogError extends Error {
@@ -185,6 +195,7 @@ function parseItems($: cheerio.CheerioAPI, shop: ShopSource): CatalogItem[] {
       coverSrc: preferMedium(coverSrc),
       price: parsed.salePrice ?? parsed.prices[0],
       originalPrice: parsed.originalPrice,
+      sourceUrl: `https://${shop.host}/albums/${id}`,
     });
   });
 
@@ -438,7 +449,11 @@ async function fetchAlbumPage(shop: ShopSource, id: string, page: number) {
   return fetchHtml(url.toString());
 }
 
-export async function getItem(slug: ShopSlug, id: string): Promise<ItemDetail> {
+export async function getItem(
+  slug: ShopSlug,
+  id: string,
+  options?: { master?: boolean },
+): Promise<ItemDetail> {
   const shop = getShopSource(slug);
   if (!shop) throw new CatalogError("Unknown catalog");
   if (!/^\d+$/.test(id)) throw new CatalogError("Unknown item");
@@ -454,15 +469,22 @@ export async function getItem(slug: ShopSlug, id: string): Promise<ItemDetail> {
   )
     .replace(/\s+/g, " ")
     .trim();
-  const displayTitle = parseProductTitle(title).raw;
+  const parsed = parseProductTitle(title);
+  const displayTitle = parsed.raw;
 
   if (!title || isHiddenAlbum(title)) {
     throw new CatalogError("Item not found");
   }
 
-  const description = sanitizeCopy(
-    $(".showalbumheader__gallerysubtitle").first().text(),
-  );
+  const subtitle = $(".showalbumheader__gallerysubtitle").first().text();
+  const description = options?.master
+    ? restoreCopy(subtitle)
+    : sanitizeCopy(subtitle);
+  const sourceUrl = `https://${shop.host}/albums/${id}`;
+  const links = [
+    sourceUrl,
+    ...extractHttpLinks(subtitle).filter((url) => url !== sourceUrl),
+  ];
   const pageCount = Math.max(1, parsePageCount($));
   const photos = parsePhotos($, shop);
 
@@ -489,6 +511,10 @@ export async function getItem(slug: ShopSlug, id: string): Promise<ItemDetail> {
     page: 1,
     pageCount,
     photoCount,
+    sourceUrl,
+    links,
+    price: parsed.salePrice ?? parsed.prices[0],
+    originalPrice: parsed.originalPrice,
   };
 }
 

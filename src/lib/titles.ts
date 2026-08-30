@@ -80,3 +80,18 @@ export function sanitizeCopy(text: string) {
   if (!cleaned || BLOCKED_HOST.test(cleaned)) return "";
   return cleaned;
 }
+
+export function formatYen(price?: number) {
+  if (price == null || !Number.isFinite(price) || price <= 0) return null;
+  return `¥${price}`;
+}
+
+export function extractHttpLinks(text: string) {
+  const found = decodeEntities(text).match(/https?:\/\/[^\s<>"']+/gi) ?? [];
+  const cleaned = found.map((url) => url.replace(/[.,);]+$/g, ""));
+  return [...new Set(cleaned)];
+}
+
+export function restoreCopy(text: string) {
+  return restoreBrands(decodeEntities(text).replace(/\s+/g, " ")).trim();
+}
