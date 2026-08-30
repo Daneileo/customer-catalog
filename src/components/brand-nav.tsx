@@ -77,7 +77,7 @@ export function BrandNav({
           <ChevronDown className="size-3.5" />
         </label>
 
-        <div className="pointer-events-none invisible fixed inset-0 z-50 peer-checked:pointer-events-auto peer-checked:visible">
+        <div className="pointer-events-none invisible fixed inset-0 z-50 overflow-hidden peer-checked:pointer-events-auto peer-checked:visible">
           <label
             htmlFor="brand-menu"
             className="absolute inset-0 bg-black/40"
