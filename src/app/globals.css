@@ -129,55 +129,28 @@
   }
 }
 
-html.brand-overlay-open,
-html.brand-overlay-open body {
-  overflow: hidden !important;
-  overscroll-behavior: none;
-}
-
-.brand-overlay {
+.brand-dropdown-panel {
   position: fixed;
-  inset: 0;
   z-index: 9999;
   display: flex;
-  height: 100dvh;
-  width: 100%;
-  align-items: stretch;
-  justify-content: center;
+  max-height: min(70dvh, 28rem);
+  flex-direction: column;
   overflow: hidden;
-  background: rgb(0 0 0 / 40%);
-}
-
-.brand-overlay-panel {
-  display: grid;
-  grid-template-rows: auto auto minmax(0, 1fr);
-  width: 100%;
-  max-width: 48rem;
-  height: 100%;
-  max-height: 100dvh;
+  border: 1px solid var(--border);
+  border-radius: 0.75rem;
   background: var(--background);
-  box-shadow: 0 25px 50px -12px rgb(0 0 0 / 25%);
+  box-shadow:
+    0 10px 15px -3px rgb(0 0 0 / 10%),
+    0 4px 6px -4px rgb(0 0 0 / 10%);
 }
 
-.brand-overlay-list {
+.brand-dropdown-list {
   min-height: 0;
+  flex: 1;
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: 0.75rem 0.5rem;
+  padding: 0.5rem;
   scrollbar-gutter: stable;
   touch-action: pan-y;
-}
-
-@media (min-width: 640px) {
-  .brand-overlay {
-    align-items: center;
-    padding: 1.5rem;
-  }
-
-  .brand-overlay-panel {
-    height: min(90dvh, 44rem);
-    max-height: min(90dvh, 44rem);
-    border-radius: 0.75rem;
-  }
 }
