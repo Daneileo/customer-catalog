@@ -2,7 +2,11 @@ import "server-only";
 
 import * as cheerio from "cheerio";
 import { getShopSource, type ShopSource } from "@/lib/shop-sources";
-import { SHOP_LIST, type ShopSlug } from "@/lib/shops";
+import {
+  STORES,
+  type ShopSlug,
+  type StoreSlug,
+} from "@/lib/shops";
 import { parseProductTitle, sanitizeCopy } from "@/lib/titles";
 import { restoreBrands } from "@/lib/brands";
 
@@ -59,10 +63,16 @@ export class CatalogError extends Error {
 
 const SKIP_ALBUM =
   /^(?:discord|whatsapp\b|how to use\b)/i;
+const SKIP_CATEGORY = /^(?:临时隐藏|单独隐藏)$/;
 
 export function isHiddenAlbum(title: string) {
   const normalized = title.replace(/[🔥\s]+/g, " ").trim();
   return SKIP_ALBUM.test(normalized) || /yupoo/i.test(normalized);
+}
+
+function isHiddenCategory(name: string) {
+  const normalized = name.replace(/[🔥\s]+/g, " ").trim();
+  return isHiddenAlbum(normalized) || SKIP_CATEGORY.test(normalized);
 }
 
 function proxySrc(shop: ShopSource, url: string | undefined | null) {
@@ -123,7 +133,7 @@ function parseCategories($: cheerio.CheerioAPI) {
     const id = href.match(/\/categories\/(\d+)/)?.[1];
     if (!id || id === "0") return;
     const name = restoreBrands($(el).text().replace(/\s+/g, " ").trim());
-    if (!name) return;
+    if (!name || isHiddenCategory(name)) return;
     categories.set(id, name);
   });
 
@@ -300,10 +310,13 @@ function combineListings(pages: CatalogPage[], page: number): CatalogPage {
   };
 }
 
-async function loadAllShops(
+async function loadStoreShops(
+  store: StoreSlug,
   loader: (slug: ShopSlug) => Promise<CatalogPage>,
 ) {
-  const settled = await Promise.allSettled(SHOP_LIST.map((shop) => loader(shop.slug)));
+  const settled = await Promise.allSettled(
+    STORES[store].shops.map((slug) => loader(slug)),
+  );
   const pages = settled.flatMap((result) =>
     result.status === "fulfilled" ? [result.value] : [],
   );
@@ -313,18 +326,22 @@ async function loadAllShops(
   return pages;
 }
 
-export async function getCombinedIndex(page = 1) {
-  const pages = await loadAllShops((slug) => getAlbumIndex(slug, page));
+export async function getStoreIndex(store: StoreSlug, page = 1) {
+  const pages = await loadStoreShops(store, (slug) => getAlbumIndex(slug, page));
   return combineListings(pages, page);
 }
 
-export async function getCombinedCategory(slug: string, page = 1) {
+export async function getStoreCategory(
+  store: StoreSlug,
+  slug: string,
+  page = 1,
+) {
   if (!slug) throw new CatalogError("Unknown category");
-  const index = await getCombinedIndex(1);
+  const index = await getStoreIndex(store, 1);
   const category = index.categories.find((entry) => entry.id === slug);
   if (!category) throw new CatalogError("Unknown category");
 
-  const pages = await loadAllShops(async (shopSlug) => {
+  const pages = await loadStoreShops(store, async (shopSlug) => {
     const source = category.sources.find((entry) => entry.shop === shopSlug);
     if (!source) {
       return {
@@ -345,11 +362,25 @@ export async function getCombinedCategory(slug: string, page = 1) {
   };
 }
 
-export async function searchCombined(query: string, page = 1) {
+export async function searchStore(store: StoreSlug, query: string, page = 1) {
   const q = query.trim();
-  if (!q) return getCombinedIndex(page);
-  const pages = await loadAllShops((slug) => searchCatalog(slug, q, page));
+  if (!q) return getStoreIndex(store, page);
+  const pages = await loadStoreShops(store, (slug) =>
+    searchCatalog(slug, q, page),
+  );
   return combineListings(pages, page);
+}
+
+export async function getCombinedIndex(page = 1) {
+  return getStoreIndex("sirius", page);
+}
+
+export async function getCombinedCategory(slug: string, page = 1) {
+  return getStoreCategory("sirius", slug, page);
+}
+
+export async function searchCombined(query: string, page = 1) {
+  return searchStore("sirius", query, page);
 }
 
 function parsePhotos($: cheerio.CheerioAPI, shop: ShopSource): CatalogPhoto[] {

@@ -15,10 +15,10 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: {
     default: "Sirius",
-    template: "%s · Sirius",
+    template: "%s",
   },
   description:
-    "Product catalog with photos. Item pages stay on this site — no supplier links.",
+    "Sirius and Husky product catalogs with photos. Item pages stay on this site — no supplier links.",
   referrer: "no-referrer",
   robots: { index: false, follow: false },
 };

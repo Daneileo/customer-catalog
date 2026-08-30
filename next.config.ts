@@ -5,6 +5,21 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
+        source: "/sirius",
+        destination: "/",
+        permanent: false,
+      },
+      {
+        source: "/sirius/search",
+        destination: "/search",
+        permanent: false,
+      },
+      {
+        source: "/sirius/c/:id",
+        destination: "/c/:id",
+        permanent: false,
+      },
+      {
         source: "/:shop(taurus|scorpio|pisces)",
         destination: "/",
         permanent: false,

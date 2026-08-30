@@ -1,10 +1,13 @@
-# Sirius
+# Catalog
 
 A storefront for the same albums and photos as the supplier galleries, with **no outbound product links**. Clicking an item opens a photo page on this site. Supplier gallery URLs are never shown in the UI, and images are proxied so the browser does not load those hosts.
 
-**Sirius** combines the Taurus, Scorpio, and Pisces galleries into one catalog.
+Two catalogs:
 
-Albums that exist only to share other gallery links or agent how-to posts are omitted. Item descriptions that contain marketplace or gallery URLs are stripped. Yen prices are not shown.
+- **Sirius** — combined Taurus, Scorpio, and Pisces galleries
+- **Husky** — the Husky gallery
+
+Switch catalogs with the tabs at the top. Albums that exist only to share other gallery links or agent how-to posts are omitted. Item descriptions that contain marketplace or gallery URLs are stripped. Yuan / yen prices are not shown. Brand names that were written with star or fire emoji censors are restored.
 
 ## Run locally
 
@@ -19,9 +22,9 @@ WhatsApp orders use `+1 (416) 245-9504`.
 
 ## What you get
 
-- One combined grid of items from all three galleries
+- Sirius and Husky as separate catalogs
 - Category chips plus a category drawer
-- Search across the full catalog
+- Search within the selected catalog
 - Item pages with a photo gallery / lightbox
 - Loading, empty, and error states
 

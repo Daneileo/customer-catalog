@@ -7,7 +7,7 @@ import {
 } from "@/lib/catalog";
 import { STORES, storeHome } from "@/lib/shops";
 
-const STORE = STORES.sirius;
+const STORE = STORES.husky;
 
 export const revalidate = 300;
 
@@ -15,7 +15,7 @@ export const metadata = {
   title: STORE.name,
 };
 
-export default async function HomePage({
+export default async function HuskyHomePage({
   searchParams,
 }: {
   searchParams: Promise<{ page?: string }>;
@@ -25,7 +25,7 @@ export default async function HomePage({
   let data: CatalogPage | null = null;
   let message: string | null = null;
   try {
-    data = await getStoreIndex("sirius", page);
+    data = await getStoreIndex("husky", page);
   } catch (error) {
     message =
       error instanceof FeedError
@@ -34,16 +34,16 @@ export default async function HomePage({
   }
 
   if (!data) {
-    return <CatalogError message={message ?? undefined} href={storeHome("sirius")} />;
+    return <CatalogError message={message ?? undefined} href={storeHome("husky")} />;
   }
 
   return (
     <CatalogListing
-      store="sirius"
+      store="husky"
       title={STORE.name}
       description={STORE.blurb}
       data={data}
-      pathname="/"
+      pathname={storeHome("husky")}
     />
   );
 }

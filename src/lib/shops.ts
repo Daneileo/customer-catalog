@@ -1,8 +1,8 @@
-export const SITE_NAME = "Sirius";
 export const WHATSAPP_NUMBER = "14162459504";
 export const WHATSAPP_DISPLAY = "+1 (416) 245-9504";
 
-export type ShopSlug = "taurus" | "scorpio" | "pisces";
+export type ShopSlug = "taurus" | "scorpio" | "pisces" | "husky";
+export type StoreSlug = "sirius" | "husky";
 
 export type Shop = {
   slug: ShopSlug;
@@ -26,16 +26,73 @@ export const SHOPS: Record<ShopSlug, Shop> = {
     name: "Pisces",
     blurb: "Third catalog",
   },
+  husky: {
+    slug: "husky",
+    name: "Husky",
+    blurb: "Husky catalog",
+  },
 };
 
-export const SHOP_LIST = Object.values(SHOPS);
+export type Store = {
+  slug: StoreSlug;
+  name: string;
+  blurb: string;
+  shops: ShopSlug[];
+};
+
+export const STORES: Record<StoreSlug, Store> = {
+  sirius: {
+    slug: "sirius",
+    name: "Sirius",
+    blurb:
+      "Combined catalog. Open any item for photos — nothing links away from this site.",
+    shops: ["taurus", "scorpio", "pisces"],
+  },
+  husky: {
+    slug: "husky",
+    name: "Husky",
+    blurb:
+      "Husky catalog. Open any item for photos — nothing links away from this site.",
+    shops: ["husky"],
+  },
+};
+
+export const STORE_LIST = Object.values(STORES);
 
 export function isShopSlug(value: string): value is ShopSlug {
   return value in SHOPS;
 }
 
+export function isStoreSlug(value: string): value is StoreSlug {
+  return value in STORES;
+}
+
 export function getShop(slug: string): Shop | null {
   return isShopSlug(slug) ? SHOPS[slug] : null;
+}
+
+export function getStore(slug: string): Store | null {
+  return isStoreSlug(slug) ? STORES[slug] : null;
+}
+
+export function storeForShop(shop: ShopSlug): StoreSlug {
+  return shop === "husky" ? "husky" : "sirius";
+}
+
+export function storeBasePath(store: StoreSlug) {
+  return store === "sirius" ? "" : `/${store}`;
+}
+
+export function storeHome(store: StoreSlug) {
+  return store === "sirius" ? "/" : `/${store}`;
+}
+
+export function storeSearchPath(store: StoreSlug) {
+  return `${storeBasePath(store)}/search`;
+}
+
+export function storeCategoryPath(store: StoreSlug, categoryId: string) {
+  return `${storeBasePath(store)}/c/${categoryId}`;
 }
 
 export function whatsappLink(message: string) {

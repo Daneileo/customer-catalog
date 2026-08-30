@@ -1,9 +1,9 @@
 import { CatalogChrome } from "@/components/catalog-chrome";
 
-export default function SiriusLayout({
+export default function HuskyLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  return <CatalogChrome store="sirius">{children}</CatalogChrome>;
+  return <CatalogChrome store="husky">{children}</CatalogChrome>;
 }

@@ -9,7 +9,14 @@ import {
   getItem,
   type ItemDetail,
 } from "@/lib/catalog";
-import { SITE_NAME, WHATSAPP_DISPLAY, getShop, whatsappLink } from "@/lib/shops";
+import {
+  STORES,
+  WHATSAPP_DISPLAY,
+  getShop,
+  storeForShop,
+  storeHome,
+  whatsappLink,
+} from "@/lib/shops";
 import { parseProductTitle } from "@/lib/titles";
 
 export const revalidate = 300;
@@ -39,6 +46,9 @@ export default async function ItemPage({
   const shop = getShop(slug);
   if (!shop) notFound();
 
+  const store = storeForShop(shop.slug);
+  const storeName = STORES[store].name;
+
   let item: ItemDetail | null = null;
   let message: string | null = null;
   try {
@@ -55,7 +65,7 @@ export default async function ItemPage({
       <CatalogError
         title="Item unavailable"
         message={message ?? undefined}
-        href="/"
+        href={storeHome(store)}
       />
     );
   }
@@ -66,11 +76,11 @@ export default async function ItemPage({
   return (
     <div className="space-y-6">
       <Link
-        href="/"
+        href={storeHome(store)}
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
-        Back to {SITE_NAME}
+        Back to {storeName}
       </Link>
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
@@ -102,7 +112,7 @@ export default async function ItemPage({
             </div>
             <div className="rounded-lg bg-muted px-3 py-2">
               <dt className="text-xs text-muted-foreground">Catalog</dt>
-              <dd className="font-medium">{SITE_NAME}</dd>
+              <dd className="font-medium">{storeName}</dd>
             </div>
           </dl>
 

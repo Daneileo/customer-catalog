@@ -1,9 +1,16 @@
 import Link from "next/link";
+import {
+  storeCategoryPath,
+  storeHome,
+  type StoreSlug,
+} from "@/lib/shops";
 
 export function CategoryChips({
+  store,
   categories,
   activeId,
 }: {
+  store: StoreSlug;
   categories: { id: string; name: string }[];
   activeId?: string;
 }) {
@@ -14,7 +21,7 @@ export function CategoryChips({
   return (
     <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
       <Link
-        href="/"
+        href={storeHome(store)}
         className={`rounded-full px-3 py-1.5 text-xs whitespace-nowrap sm:text-sm ${
           !activeId
             ? "bg-foreground text-background"
@@ -26,7 +33,7 @@ export function CategoryChips({
       {chips.map((category) => (
         <Link
           key={category.id}
-          href={`/c/${category.id}`}
+          href={storeCategoryPath(store, category.id)}
           className={`rounded-full px-3 py-1.5 text-xs whitespace-nowrap sm:text-sm ${
             activeId === category.id
               ? "bg-foreground text-background"

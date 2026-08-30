@@ -24,6 +24,11 @@ export const SHOP_SOURCES: Record<ShopSlug, ShopSource> = {
     host: "pisces-reps.x.yupoo.com",
     photoUser: "pisces-reps",
   },
+  husky: {
+    slug: "husky",
+    host: "huskyreps.x.yupoo.com",
+    photoUser: "huskyreps",
+  },
 };
 
 export function getShopSource(slug: string): ShopSource | null {

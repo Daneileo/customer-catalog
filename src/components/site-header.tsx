@@ -2,28 +2,39 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { CategoryMenu } from "@/components/category-menu";
 import { SearchForm } from "@/components/search-form";
-import { SITE_NAME, WHATSAPP_DISPLAY, whatsappLink } from "@/lib/shops";
+import {
+  STORE_LIST,
+  WHATSAPP_DISPLAY,
+  storeHome,
+  whatsappLink,
+  type StoreSlug,
+} from "@/lib/shops";
+import { cn } from "@/lib/utils";
 
 type Category = { id: string; name: string };
 
 export function SiteHeader({
+  store,
   categories,
 }: {
+  store: StoreSlug;
   categories: Category[];
 }) {
+  const current = STORE_LIST.find((entry) => entry.slug === store) ?? STORE_LIST[0];
+
   return (
     <header className="sticky top-0 z-40 border-b bg-background/90 backdrop-blur-md">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-2">
-          <CategoryMenu categories={categories} />
-          <Link href="/" className="min-w-0 flex-1">
+          <CategoryMenu store={store} categories={categories} />
+          <div className="min-w-0 flex-1">
             <p className="font-heading text-lg font-semibold tracking-tight">
-              {SITE_NAME}
+              {current.name}
             </p>
             <p className="truncate text-xs text-muted-foreground">
               Browse items. Photos only — no supplier links.
             </p>
-          </Link>
+          </div>
           <Button
             nativeButton={false}
             render={
@@ -40,8 +51,46 @@ export function SiteHeader({
           </Button>
         </div>
 
-        <SearchForm />
+        <nav className="flex gap-1" aria-label="Catalogs">
+          {STORE_LIST.map((entry) => {
+            const active = entry.slug === store;
+            return (
+              <Link
+                key={entry.slug}
+                href={storeHome(entry.slug)}
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-sm",
+                  active
+                    ? "bg-foreground text-background"
+                    : "bg-muted text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {entry.name}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <SearchForm store={store} />
       </div>
     </header>
+  );
+}
+
+export function SiteFooter() {
+  return (
+    <footer className="border-t">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <p>Photos for display. Message on WhatsApp to order.</p>
+        <a
+          className="font-medium text-foreground hover:underline"
+          href={whatsappLink("Hi, I want to place an order.")}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          WhatsApp {WHATSAPP_DISPLAY}
+        </a>
+      </div>
+    </footer>
   );
 }

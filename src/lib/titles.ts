@@ -17,14 +17,18 @@ function decodeEntities(value: string) {
     .replace(/&gt;/g, ">")
     .replace(/&quot;/g, '"')
     .replace(/&#x3D;/gi, "=")
+    .replace(/&#x27;/gi, "'")
+    .replace(/&#39;/g, "'")
     .replace(/&#(\d+);/g, (_, n: string) => String.fromCharCode(Number(n)))
     .replace(/&nbsp;/g, " ");
 }
 
 export function parseProductTitle(raw: string): ParsedTitle {
   const restored = restoreBrands(decodeEntities(raw).replace(/\s+/g, " ").trim());
-  const sale = restored.match(/[￥¥]\s*(\d+)\s*←\s*(\d+)/);
-  const prices = [...restored.matchAll(/[￥¥]\s*(\d+)/g)].map((m) => Number(m[1]));
+  const sale = restored.match(/[￥¥]\s*~?\s*(\d+)\s*(?:⬅️|←)\s*[￥¥]?\s*(\d+)/);
+  const prices = [...restored.matchAll(/[￥¥]\s*~?\s*(\d+)/g)].map((m) =>
+    Number(m[1]),
+  );
   const title = stripYenPrices(restored);
   const noteMatch = title.match(/[（(]([^）)]+)[）)]\s*$/);
   const note = noteMatch?.[1]?.trim();
@@ -47,17 +51,18 @@ export function parseProductTitle(raw: string): ParsedTitle {
 
 export function stripYenPrices(value: string) {
   return value
-    .replace(/[￥¥]\s*\d+\s*←\s*\d+/g, " ")
-    .replace(/\d+\s*[￥¥]\s*←\s*\d+/g, " ")
+    .replace(/[￥¥]\s*~?\s*\d+\s*(?:⬅️|←)\s*[￥¥]?\s*\d+/g, " ")
+    .replace(/\d+\s*[￥¥]\s*(?:⬅️|←)\s*[￥¥]?\s*\d+/g, " ")
+    .replace(/[￥¥]\s*\d+\s*~\s*\d+/g, " ")
+    .replace(/[￥¥]\s*~\s*\d+/g, " ")
+    .replace(/[￥¥]\s*\d+\s*~/g, " ")
+    .replace(/[￥¥]\s*~/g, " ")
     .replace(/[￥¥]\s*\d+/g, " ")
     .replace(/\d+\s*[￥¥]/g, " ")
-    .replace(/\bTOP\b/gi, " ")
+    .replace(/[￥¥]/g, " ")
+    .replace(/⬅️|←/g, " ")
     .replace(/\s+/g, " ")
     .trim();
-}
-
-export function formatYuan(amount: number) {
-  return `¥${amount}`;
 }
 
 const BLOCKED_HOST =
