@@ -20,11 +20,8 @@ function GalleryImage({
   alt: string;
   className?: string;
 }) {
-  const [current, setCurrent] = useState(src);
-
-  useEffect(() => {
-    setCurrent(src);
-  }, [src]);
+  const [failed, setFailed] = useState<string | null>(null);
+  const current = failed === src ? fallbackSrc(src) ?? src : src;
 
   return (
     // eslint-disable-next-line @next/next/no-img-element
@@ -33,8 +30,7 @@ function GalleryImage({
       alt={alt}
       className={className}
       onError={() => {
-        const next = fallbackSrc(current);
-        if (next) setCurrent(next);
+        if (failed !== src) setFailed(src);
       }}
     />
   );
