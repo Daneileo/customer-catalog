@@ -15,6 +15,11 @@ import {
 } from "@/lib/titles";
 import { restoreBrands } from "@/lib/brands";
 import { isBrandListing, sortBrandList } from "@/lib/category-nav";
+import {
+  categoryFitsQuery,
+  extractSku,
+  itemMatchesQuery,
+} from "@/lib/search-match";
 
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
@@ -378,29 +383,144 @@ export async function getStoreCategory(
   };
 }
 
+const SEARCH_PAGE_SIZE = 60;
+const YUPOO_SEARCH_PAGES = 3;
+const BRAND_SEARCH_PAGES = 3;
+const TITLE_SCAN_PAGES = 8;
+
+function uniqueItems(items: CatalogItem[]) {
+  const seen = new Set<string>();
+  const out: CatalogItem[] = [];
+  for (const item of items) {
+    const key = `${item.shop}-${item.id}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    out.push(item);
+  }
+  return out;
+}
+
+function titleHits(items: CatalogItem[], query: string) {
+  return items.filter((item) => itemMatchesQuery(item, query));
+}
+
+async function searchShopPages(slug: ShopSlug, query: string, maxPages: number) {
+  const first = await searchCatalog(slug, query, 1);
+  const last = Math.min(maxPages, Math.max(1, first.pageCount));
+  if (last === 1) return first.items;
+  const rest = await Promise.all(
+    Array.from({ length: last - 1 }, (_, i) => searchCatalog(slug, query, i + 2)),
+  );
+  return [first, ...rest].flatMap((listing) => listing.items);
+}
+
+async function loadBrandTitleHits(
+  store: StoreSlug,
+  categoryId: string,
+  query: string,
+) {
+  const first = await getStoreCategory(store, categoryId, 1);
+  const last = Math.min(BRAND_SEARCH_PAGES, Math.max(1, first.pageCount));
+  const rest =
+    last > 1
+      ? await Promise.all(
+          Array.from({ length: last - 1 }, (_, i) =>
+            getStoreCategory(store, categoryId, i + 2),
+          ),
+        )
+      : [];
+  return titleHits([first, ...rest].flatMap((listing) => listing.items), query);
+}
+
+async function scanAlbumTitles(slug: ShopSlug, query: string) {
+  const first = await getAlbumIndex(slug, 1);
+  const last = Math.min(TITLE_SCAN_PAGES, Math.max(1, first.pageCount));
+  const rest =
+    last > 1
+      ? await Promise.all(
+          Array.from({ length: last - 1 }, (_, i) => getAlbumIndex(slug, i + 2)),
+        )
+      : [];
+  return titleHits([first, ...rest].flatMap((listing) => listing.items), query);
+}
+
+function paginateSearch(items: CatalogItem[], page: number): Pick<
+  CatalogPage,
+  "items" | "page" | "pageCount"
+> {
+  const pageCount = Math.max(1, Math.ceil(items.length / SEARCH_PAGE_SIZE));
+  const safePage = Math.min(Math.max(1, page), pageCount);
+  const start = (safePage - 1) * SEARCH_PAGE_SIZE;
+  return {
+    items: items.slice(start, start + SEARCH_PAGE_SIZE),
+    page: safePage,
+    pageCount,
+  };
+}
+
 export async function searchStore(store: StoreSlug, query: string, page = 1) {
   const q = query.trim();
   if (!q) return getStoreIndex(store, page);
 
   const index = await getStoreIndex(store, 1);
-  const folded = q.toLowerCase().replace(/['’]/g, "").replace(/\s+/g, " ");
-  const category = index.categories.find((entry) => {
-    const name = entry.name.toLowerCase().replace(/['’]/g, "").replace(/\s+/g, " ");
-    return name === folded;
-  });
+  const shops = STORES[store].shops;
+  const sku = extractSku(q);
+  const numericQuery = Boolean(sku && /^[\d\s]+$/.test(q));
 
-  const pages = await loadStoreShops(store, (slug) =>
-    searchCatalog(slug, q, page),
+  const yupooSettled = await Promise.allSettled(
+    shops.map((slug) => searchShopPages(slug, q, YUPOO_SEARCH_PAGES)),
   );
-  const combined = combineListings(pages, page);
-  const hasHits = combined.items.length > 0;
-  if (!hasHits && category) {
-    const listing = await getStoreCategory(store, category.id, page);
-    return { ...listing, categories: index.categories };
+  let hits = uniqueItems([
+    ...titleHits(index.items, q),
+    ...yupooSettled.flatMap((result) =>
+      result.status === "fulfilled" ? titleHits(result.value, q) : [],
+    ),
+  ]);
+
+  if (hits.length === 0 && sku && sku !== q) {
+    const skuSettled = await Promise.allSettled(
+      shops.map((slug) => searchShopPages(slug, sku, 2)),
+    );
+    hits = uniqueItems([
+      ...hits,
+      ...skuSettled.flatMap((result) =>
+        result.status === "fulfilled"
+          ? [...titleHits(result.value, q), ...titleHits(result.value, sku)]
+          : [],
+      ),
+    ]);
+  }
+
+  if (hits.length === 0 && !numericQuery) {
+    const brands = index.categories
+      .filter((entry) => categoryFitsQuery(entry.name, q))
+      .slice(0, 5);
+    if (brands.length > 0) {
+      const brandSettled = await Promise.allSettled(
+        brands.map((category) => loadBrandTitleHits(store, category.id, q)),
+      );
+      hits = uniqueItems([
+        ...hits,
+        ...brandSettled.flatMap((result) =>
+          result.status === "fulfilled" ? result.value : [],
+        ),
+      ]);
+    }
+  }
+
+  if (hits.length === 0) {
+    const scanned = await Promise.allSettled(
+      shops.map((slug) => scanAlbumTitles(slug, q)),
+    );
+    hits = uniqueItems(
+      scanned.flatMap((result) =>
+        result.status === "fulfilled" ? result.value : [],
+      ),
+    );
   }
 
   return {
-    ...combined,
+    ...paginateSearch(hits, page),
     categories: index.categories,
   };
 }

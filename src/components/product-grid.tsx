@@ -69,17 +69,19 @@ export function ProductCard({
 export function ProductGrid({
   items,
   mode = "storefront",
+  emptyTitle = "No items on this page.",
+  emptyDescription = "Try another page, category, or search.",
 }: {
   items: CatalogItem[];
   mode?: CatalogMode;
+  emptyTitle?: string;
+  emptyDescription?: string;
 }) {
   if (items.length === 0) {
     return (
       <div className="rounded-xl border border-dashed bg-card px-6 py-16 text-center">
-        <p className="font-medium">No items on this page.</p>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Try another page, category, or search.
-        </p>
+        <p className="font-medium">{emptyTitle}</p>
+        <p className="mt-1 text-sm text-muted-foreground">{emptyDescription}</p>
       </div>
     );
   }

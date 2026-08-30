@@ -61,7 +61,18 @@ export function CatalogListing({
           </a>
         ) : null}
       </div>
-      <ProductGrid items={data.items} mode={mode} />
+      <ProductGrid
+        items={data.items}
+        mode={mode}
+        emptyTitle={
+          query?.q ? `No titles match “${query.q}”` : undefined
+        }
+        emptyDescription={
+          query?.q
+            ? "Try a SKU, a brand, or any word that appears in the item title."
+            : undefined
+        }
+      />
       <PaginationBar
         pathname={pathname}
         page={data.page}

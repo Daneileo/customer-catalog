@@ -9,6 +9,8 @@ Two catalogs:
 
 **All** shows every item. Hover or tap **Brands** for the full brand list (decoded names). Opening a brand shows that brand’s items, same as the original galleries.
 
+The search bar is on every page. Type any text from an item title — including a SKU like `502221671` — and press **Search** (or Enter) to see matching items in that catalog.
+
 Albums that exist only to share other gallery links or agent how-to posts are omitted. Item descriptions that contain marketplace or gallery URLs are stripped. Yuan / yen prices are not shown.
 
 A **master copy** at `/master` (Medved) and `/master/mishka` shows yuan prices and album links. It is not linked from the customer catalog — open those URLs directly. Download the current page as CSV from the master listing.
