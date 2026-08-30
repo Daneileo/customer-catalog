@@ -1,5 +1,5 @@
-export const WHATSAPP_NUMBER = "85257363298";
-export const WHATSAPP_DISPLAY = "+852 5736 3298";
+export const WHATSAPP_NUMBER = "14162459504";
+export const WHATSAPP_DISPLAY = "+1 (416) 245-9504";
 
 export type ShopSlug = "taurus" | "scorpio" | "pisces";
 

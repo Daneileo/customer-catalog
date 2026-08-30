@@ -18,7 +18,7 @@ npm run dev
 
 Open [http://localhost:43141](http://localhost:43141). The home page loads the Taurus catalog.
 
-WhatsApp orders use `+852 5736 3298`.
+WhatsApp orders use `+1 (416) 245-9504`.
 
 ## What you get
 

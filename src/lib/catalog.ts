@@ -4,6 +4,7 @@ import * as cheerio from "cheerio";
 import { getShopSource, type ShopSource } from "@/lib/shop-sources";
 import type { ShopSlug } from "@/lib/shops";
 import { parseProductTitle, sanitizeCopy } from "@/lib/titles";
+import { restoreBrands } from "@/lib/brands";
 
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
@@ -115,7 +116,7 @@ function parseCategories($: cheerio.CheerioAPI) {
     const href = $(el).attr("href") || "";
     const id = href.match(/\/categories\/(\d+)/)?.[1];
     if (!id || id === "0") return;
-    const name = $(el).text().replace(/\s+/g, " ").trim();
+    const name = restoreBrands($(el).text().replace(/\s+/g, " ").trim());
     if (!name) return;
     categories.set(id, name);
   });
@@ -158,7 +159,7 @@ function parseItems($: cheerio.CheerioAPI, shop: ShopSource): CatalogItem[] {
     items.push({
       id,
       shop: shop.slug,
-      title,
+      title: parsed.raw,
       photoCount,
       coverSrc: preferMedium(coverSrc),
       price: parsed.salePrice ?? parsed.prices[0],
@@ -278,6 +279,7 @@ export async function getItem(slug: ShopSlug, id: string): Promise<ItemDetail> {
   )
     .replace(/\s+/g, " ")
     .trim();
+  const displayTitle = restoreBrands(title);
 
   if (!title || isHiddenAlbum(title)) {
     throw new CatalogError("Item not found");
@@ -306,7 +308,7 @@ export async function getItem(slug: ShopSlug, id: string): Promise<ItemDetail> {
   return {
     id,
     shop: shop.slug,
-    title,
+    title: displayTitle,
     description,
     photos,
     page: 1,

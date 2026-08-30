@@ -1,3 +1,5 @@
+import { restoreBrands } from "@/lib/brands";
+
 export type ParsedTitle = {
   raw: string;
   headline: string;
@@ -20,7 +22,7 @@ function decodeEntities(value: string) {
 }
 
 export function parseProductTitle(raw: string): ParsedTitle {
-  const title = decodeEntities(raw).replace(/\s+/g, " ").trim();
+  const title = restoreBrands(decodeEntities(raw).replace(/\s+/g, " ").trim());
   const noteMatch = title.match(/[（(]([^）)]+)[）)]\s*$/);
   const note = noteMatch?.[1]?.trim();
   const withoutNote = note
