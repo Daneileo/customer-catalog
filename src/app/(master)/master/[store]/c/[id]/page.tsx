@@ -24,7 +24,7 @@ export async function generateMetadata({
   const store = getStore(storeSlug);
   if (!store) return { title: "Category" };
   try {
-    const data = await getStoreCategory(store.slug, id, 1);
+    const data = await getStoreCategory(store.slug, id, 1, { master: true });
     const current = data.categories.find((category) => category.id === id);
     return { title: current ? `${current.name} · master` : "Category" };
   } catch {
@@ -48,7 +48,7 @@ export default async function MasterStoreCategoryPage({
   let data: CatalogPage | null = null;
   let message: string | null = null;
   try {
-    data = await getStoreCategory(store.slug, id, page);
+    data = await getStoreCategory(store.slug, id, page, { master: true });
   } catch (error) {
     message =
       error instanceof FeedError

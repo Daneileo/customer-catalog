@@ -34,7 +34,7 @@ export default async function MasterStoreHomePage({
   let data: CatalogPage | null = null;
   let message: string | null = null;
   try {
-    data = await getStoreIndex(store.slug, page);
+    data = await getStoreIndex(store.slug, page, { master: true });
   } catch (error) {
     message =
       error instanceof FeedError

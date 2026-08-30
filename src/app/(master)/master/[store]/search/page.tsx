@@ -48,7 +48,7 @@ export default async function MasterStoreSearchPage({
   let data: CatalogPage | null = null;
   let message: string | null = null;
   try {
-    data = await searchStore(store.slug, query, page);
+    data = await searchStore(store.slug, query, page, { master: true });
   } catch (error) {
     message =
       error instanceof FeedError

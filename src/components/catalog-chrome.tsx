@@ -38,7 +38,9 @@ async function CatalogHeader({
 }) {
   let categories: { id: string; name: string }[] = [];
   try {
-    const listing = await getStoreIndex(store, 1);
+    const listing = await getStoreIndex(store, 1, {
+      master: mode === "master",
+    });
     categories = listing.categories;
   } catch {
     categories = [];

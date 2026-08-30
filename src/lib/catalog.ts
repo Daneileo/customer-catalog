@@ -84,6 +84,10 @@ export class CatalogError extends Error {
   }
 }
 
+export type CatalogFetchOptions = {
+  master?: boolean;
+};
+
 const SKIP_ALBUM =
   /^(?:discord|whatsapp\b|how to use\b|how to (?:order|purchase|place)|shopping guide|recommended agents|weidian guide)/i;
 const SKIP_CATEGORY = /^(?:临时隐藏|单独隐藏)$/;
@@ -148,7 +152,11 @@ function parsePageCount($: cheerio.CheerioAPI) {
   return match ? Number(match[1]) : 1;
 }
 
-function parseCategories($: cheerio.CheerioAPI, shop: ShopSource) {
+function parseCategories(
+  $: cheerio.CheerioAPI,
+  shop: ShopSource,
+  options?: CatalogFetchOptions,
+) {
   const categories = new Map<
     string,
     { name: string; isSubCategory: boolean }
@@ -162,7 +170,11 @@ function parseCategories($: cheerio.CheerioAPI, shop: ShopSource) {
     const id = href.match(/\/categories\/(\d+)/)?.[1];
     if (!id || id === "0") return;
     const name = restoreBrands($(el).text().replace(/\s+/g, " ").trim());
-    if (!name || isHiddenCategory(name) || isBlockedCategory(name, shop)) {
+    if (
+      !name ||
+      isHiddenCategory(name) ||
+      isBlockedCategory(name, shop, options)
+    ) {
       return;
     }
     if (listingMode === "brands" && !isBrandListing(name)) return;
@@ -200,6 +212,7 @@ function parseAlbumElement(
   $: cheerio.CheerioAPI,
   el: Element,
   shop: ShopSource,
+  options?: CatalogFetchOptions,
 ): CatalogItem | null {
   const node = $(el);
   const href = node.attr("href") || "";
@@ -214,7 +227,12 @@ function parseAlbumElement(
   )
     .replace(/\s+/g, " ")
     .trim();
-  if (!title || isHiddenAlbum(title) || isBlockedListingTitle(title, shop)) return null;
+  if (
+    !title ||
+    isHiddenAlbum(title) ||
+    isBlockedListingTitle(title, shop, options)
+  )
+    return null;
 
   const imgEl = node.find("img.album__img, img[data-origin-src]").first();
   const img =
@@ -245,11 +263,15 @@ function parseAlbumElement(
   };
 }
 
-function parseItems($: cheerio.CheerioAPI, shop: ShopSource): CatalogItem[] {
+function parseItems(
+  $: cheerio.CheerioAPI,
+  shop: ShopSource,
+  options?: CatalogFetchOptions,
+): CatalogItem[] {
   const items: CatalogItem[] = [];
 
   $("a.album__main, a.album3__main").each((_, el) => {
-    const item = parseAlbumElement($, el, shop);
+    const item = parseAlbumElement($, el, shop, options);
     if (item) items.push(item);
   });
 
@@ -279,15 +301,23 @@ async function loadListing(
   shop: ShopSource,
   kind: "albums" | "category" | "search",
   page: number,
-  extra?: { categoryId?: string; query?: string; isSubCategory?: boolean },
+  extra?: {
+    categoryId?: string;
+    query?: string;
+    isSubCategory?: boolean;
+    master?: boolean;
+  },
 ): Promise<CatalogPage> {
+  const options: CatalogFetchOptions | undefined = extra?.master
+    ? { master: true }
+    : undefined;
   const html = await fetchHtml(listingUrl(shop, kind, page, extra));
   const $ = cheerio.load(html);
   return {
-    items: parseItems($, shop),
+    items: parseItems($, shop, options),
     page,
     pageCount: Math.max(1, parsePageCount($)),
-    categories: parseCategories($, shop).map((category) => ({
+    categories: parseCategories($, shop, options).map((category) => ({
       id: category.id,
       name: category.name,
       sources: [
@@ -301,17 +331,21 @@ async function loadListing(
   };
 }
 
-export async function getAlbumIndex(slug: ShopSlug, page = 1) {
+export async function getAlbumIndex(
+  slug: ShopSlug,
+  page = 1,
+  options?: CatalogFetchOptions,
+) {
   const shop = getShopSource(slug);
   if (!shop) throw new CatalogError("Unknown catalog");
-  return loadListing(shop, "albums", page);
+  return loadListing(shop, "albums", page, options);
 }
 
 export async function getCategoryPage(
   slug: ShopSlug,
   categoryId: string,
   page = 1,
-  options?: { isSubCategory?: boolean },
+  options?: { isSubCategory?: boolean; master?: boolean },
 ) {
   const shop = getShopSource(slug);
   if (!shop) throw new CatalogError("Unknown catalog");
@@ -319,17 +353,23 @@ export async function getCategoryPage(
   return loadListing(shop, "category", page, {
     categoryId,
     isSubCategory: options?.isSubCategory,
+    master: options?.master,
   });
 }
 
-export async function searchCatalog(slug: ShopSlug, query: string, page = 1) {
+export async function searchCatalog(
+  slug: ShopSlug,
+  query: string,
+  page = 1,
+  options?: CatalogFetchOptions,
+) {
   const shop = getShopSource(slug);
   if (!shop) throw new CatalogError("Unknown catalog");
   const q = query.trim();
   if (!q) {
-    return getAlbumIndex(slug, page);
+    return getAlbumIndex(slug, page, options);
   }
-  return loadListing(shop, "search", page, { query: q });
+  return loadListing(shop, "search", page, { query: q, ...options });
 }
 
 export function categoryKey(name: string) {
@@ -423,9 +463,15 @@ async function loadStoreShops(
   return pages;
 }
 
-export async function getStoreIndex(store: StoreSlug, page = 1) {
+export async function getStoreIndex(
+  store: StoreSlug,
+  page = 1,
+  options?: CatalogFetchOptions,
+) {
   const listingMode = categoryListingModeForStore(store);
-  const pages = await loadStoreShops(store, (slug) => getAlbumIndex(slug, page));
+  const pages = await loadStoreShops(store, (slug) =>
+    getAlbumIndex(slug, page, options),
+  );
   return combineListings(pages, page, listingMode);
 }
 
@@ -433,9 +479,10 @@ export async function getStoreCategory(
   store: StoreSlug,
   slug: string,
   page = 1,
+  options?: CatalogFetchOptions,
 ) {
   if (!slug) throw new CatalogError("Unknown category");
-  const index = await getStoreIndex(store, 1);
+  const index = await getStoreIndex(store, 1, options);
   const category = index.categories.find((entry) => entry.id === slug);
   if (!category) throw new CatalogError("Unknown category");
 
@@ -451,6 +498,7 @@ export async function getStoreCategory(
     }
     const listing = await getCategoryPage(shopSlug, source.id, page, {
       isSubCategory: source.isSubCategory,
+      master: options?.master,
     });
     return listing;
   });
@@ -483,12 +531,19 @@ function titleHits(items: CatalogItem[], query: string) {
   return items.filter((item) => itemMatchesQuery(item, query));
 }
 
-async function searchShopPages(slug: ShopSlug, query: string, maxPages: number) {
-  const first = await searchCatalog(slug, query, 1);
+async function searchShopPages(
+  slug: ShopSlug,
+  query: string,
+  maxPages: number,
+  options?: CatalogFetchOptions,
+) {
+  const first = await searchCatalog(slug, query, 1, options);
   const last = Math.min(maxPages, Math.max(1, first.pageCount));
   if (last === 1) return first.items;
   const rest = await Promise.all(
-    Array.from({ length: last - 1 }, (_, i) => searchCatalog(slug, query, i + 2)),
+    Array.from({ length: last - 1 }, (_, i) =>
+      searchCatalog(slug, query, i + 2, options),
+    ),
   );
   return [first, ...rest].flatMap((listing) => listing.items);
 }
@@ -497,27 +552,34 @@ async function loadBrandTitleHits(
   store: StoreSlug,
   categoryId: string,
   query: string,
+  options?: CatalogFetchOptions,
 ) {
-  const first = await getStoreCategory(store, categoryId, 1);
+  const first = await getStoreCategory(store, categoryId, 1, options);
   const last = Math.min(BRAND_SEARCH_PAGES, Math.max(1, first.pageCount));
   const rest =
     last > 1
       ? await Promise.all(
           Array.from({ length: last - 1 }, (_, i) =>
-            getStoreCategory(store, categoryId, i + 2),
+            getStoreCategory(store, categoryId, i + 2, options),
           ),
         )
       : [];
   return titleHits([first, ...rest].flatMap((listing) => listing.items), query);
 }
 
-async function scanAlbumTitles(slug: ShopSlug, query: string) {
-  const first = await getAlbumIndex(slug, 1);
+async function scanAlbumTitles(
+  slug: ShopSlug,
+  query: string,
+  options?: CatalogFetchOptions,
+) {
+  const first = await getAlbumIndex(slug, 1, options);
   const last = Math.min(TITLE_SCAN_PAGES, Math.max(1, first.pageCount));
   const rest =
     last > 1
       ? await Promise.all(
-          Array.from({ length: last - 1 }, (_, i) => getAlbumIndex(slug, i + 2)),
+          Array.from({ length: last - 1 }, (_, i) =>
+            getAlbumIndex(slug, i + 2, options),
+          ),
         )
       : [];
   return titleHits([first, ...rest].flatMap((listing) => listing.items), query);
@@ -537,17 +599,22 @@ function paginateSearch(items: CatalogItem[], page: number): Pick<
   };
 }
 
-export async function searchStore(store: StoreSlug, query: string, page = 1) {
+export async function searchStore(
+  store: StoreSlug,
+  query: string,
+  page = 1,
+  options?: CatalogFetchOptions,
+) {
   const q = query.trim();
-  if (!q) return getStoreIndex(store, page);
+  if (!q) return getStoreIndex(store, page, options);
 
-  const index = await getStoreIndex(store, 1);
+  const index = await getStoreIndex(store, 1, options);
   const shops = STORES[store].shops;
   const sku = extractSku(q);
   const numericQuery = Boolean(sku && /^[\d\s]+$/.test(q));
 
   const yupooSettled = await Promise.allSettled(
-    shops.map((slug) => searchShopPages(slug, q, YUPOO_SEARCH_PAGES)),
+    shops.map((slug) => searchShopPages(slug, q, YUPOO_SEARCH_PAGES, options)),
   );
   let hits = uniqueItems([
     ...titleHits(index.items, q),
@@ -558,7 +625,7 @@ export async function searchStore(store: StoreSlug, query: string, page = 1) {
 
   if (hits.length === 0 && sku && sku !== q) {
     const skuSettled = await Promise.allSettled(
-      shops.map((slug) => searchShopPages(slug, sku, 2)),
+      shops.map((slug) => searchShopPages(slug, sku, 2, options)),
     );
     hits = uniqueItems([
       ...hits,
@@ -576,7 +643,9 @@ export async function searchStore(store: StoreSlug, query: string, page = 1) {
       .slice(0, 5);
     if (brands.length > 0) {
       const brandSettled = await Promise.allSettled(
-        brands.map((category) => loadBrandTitleHits(store, category.id, q)),
+        brands.map((category) =>
+          loadBrandTitleHits(store, category.id, q, options),
+        ),
       );
       hits = uniqueItems([
         ...hits,
@@ -589,7 +658,7 @@ export async function searchStore(store: StoreSlug, query: string, page = 1) {
 
   if (hits.length === 0) {
     const scanned = await Promise.allSettled(
-      shops.map((slug) => scanAlbumTitles(slug, q)),
+      shops.map((slug) => scanAlbumTitles(slug, q, options)),
     );
     hits = uniqueItems(
       scanned.flatMap((result) =>

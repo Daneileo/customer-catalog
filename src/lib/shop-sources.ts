@@ -2,12 +2,19 @@ import "server-only";
 
 import { isShopSlug, type ShopSlug } from "@/lib/shops";
 
+export type ShopBlockOptions = {
+  master?: boolean;
+};
+
 export type ShopSource = {
   slug: ShopSlug;
   host: string;
   photoUser: string;
   blockedCategoryPatterns?: RegExp[];
   blockedAlbumPatterns?: RegExp[];
+  /** Hidden on the customer site only; master copy still shows these. */
+  customerBlockedCategoryPatterns?: RegExp[];
+  customerBlockedAlbumPatterns?: RegExp[];
 };
 
 export const SHOP_SOURCES: Record<ShopSlug, ShopSource> = {
@@ -50,6 +57,8 @@ export const SHOP_SOURCES: Record<ShopSlug, ShopSource> = {
       /gtbuy/i,
       /rat king logistics/i,
     ],
+    customerBlockedCategoryPatterns: [/tik\s*tok/i],
+    customerBlockedAlbumPatterns: [/tik\s*tok/i],
   },
   yolo66: {
     slug: "yolo66",
@@ -80,6 +89,15 @@ export const SHOP_SOURCES: Record<ShopSlug, ShopSource> = {
     host: "2335499519.x.yupoo.com",
     photoUser: "2335499519",
     blockedCategoryPatterns: [/other catalogues/i, /\bnews\b/i],
+    customerBlockedCategoryPatterns: [/^👟\s*prad/i, /prad■/i],
+    customerBlockedAlbumPatterns: [
+      /cyprus/i,
+      /b22.*comparison/i,
+      /in october.*recent new batch/i,
+      /latest v3 version kl batch/i,
+      /new batches under development/i,
+      /prad\*a/i,
+    ],
   },
 };
 
@@ -91,18 +109,49 @@ function normalizeLabel(name: string) {
   return name.replace(/\s+/g, " ").trim();
 }
 
-export function isBlockedCategory(name: string, shop: ShopSource) {
-  if (!shop.blockedCategoryPatterns?.length) return false;
+function activeCategoryPatterns(shop: ShopSource, options?: ShopBlockOptions) {
+  return [
+    ...(shop.blockedCategoryPatterns ?? []),
+    ...(options?.master ? [] : shop.customerBlockedCategoryPatterns ?? []),
+  ];
+}
+
+function activeAlbumPatterns(shop: ShopSource, options?: ShopBlockOptions) {
+  return [
+    ...(shop.blockedAlbumPatterns ?? []),
+    ...(options?.master ? [] : shop.customerBlockedAlbumPatterns ?? []),
+  ];
+}
+
+export function isBlockedCategory(
+  name: string,
+  shop: ShopSource,
+  options?: ShopBlockOptions,
+) {
+  const patterns = activeCategoryPatterns(shop, options);
+  if (!patterns.length) return false;
   const normalized = normalizeLabel(name);
-  return shop.blockedCategoryPatterns.some((pattern) => pattern.test(normalized));
+  return patterns.some((pattern) => pattern.test(normalized));
 }
 
-export function isBlockedAlbum(title: string, shop: ShopSource) {
-  if (!shop.blockedAlbumPatterns?.length) return false;
+export function isBlockedAlbum(
+  title: string,
+  shop: ShopSource,
+  options?: ShopBlockOptions,
+) {
+  const patterns = activeAlbumPatterns(shop, options);
+  if (!patterns.length) return false;
   const normalized = normalizeLabel(title);
-  return shop.blockedAlbumPatterns.some((pattern) => pattern.test(normalized));
+  return patterns.some((pattern) => pattern.test(normalized));
 }
 
-export function isBlockedListingTitle(title: string, shop: ShopSource) {
-  return isBlockedCategory(title, shop) || isBlockedAlbum(title, shop);
+export function isBlockedListingTitle(
+  title: string,
+  shop: ShopSource,
+  options?: ShopBlockOptions,
+) {
+  return (
+    isBlockedCategory(title, shop, options) ||
+    isBlockedAlbum(title, shop, options)
+  );
 }
