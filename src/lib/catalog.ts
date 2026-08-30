@@ -4,11 +4,13 @@ import * as cheerio from "cheerio";
 import type { Element } from "domhandler";
 import {
   getShopSource,
+  isBlockedListingTitle,
   isBlockedCategory,
   type ShopSource,
 } from "@/lib/shop-sources";
 import {
   STORES,
+  type CategoryListingMode,
   type ShopSlug,
   type StoreSlug,
 } from "@/lib/shops";
@@ -148,20 +150,19 @@ function parsePageCount($: cheerio.CheerioAPI) {
 
 function parseCategories($: cheerio.CheerioAPI, shop: ShopSource) {
   const categories = new Map<string, string>();
+  const listingMode = categoryListingModeForShop(shop.slug);
 
-  $(".showheader__categoryList a[href^='/categories/']").each((_, el) => {
+  $(
+    ".showheader__categoryList a[href^='/categories/'], .showheader__category_new a.showheader__link[href^='/categories/'], .showheader__category_item a[href^='/categories/']",
+  ).each((_, el) => {
     const href = $(el).attr("href") || "";
     const id = href.match(/\/categories\/(\d+)/)?.[1];
     if (!id || id === "0") return;
     const name = restoreBrands($(el).text().replace(/\s+/g, " ").trim());
-    if (
-      !name ||
-      isHiddenCategory(name) ||
-      isBlockedCategory(name, shop) ||
-      !isBrandListing(name)
-    ) {
+    if (!name || isHiddenCategory(name) || isBlockedCategory(name, shop)) {
       return;
     }
+    if (listingMode === "brands" && !isBrandListing(name)) return;
     categories.set(id, name);
   });
 
@@ -170,6 +171,19 @@ function parseCategories($: cheerio.CheerioAPI, shop: ShopSource) {
     name,
     sources: [] as { shop: ShopSlug; id: string }[],
   }));
+}
+
+function categoryListingModeForShop(shop: ShopSlug): CategoryListingMode {
+  for (const store of Object.values(STORES)) {
+    if (store.shops.includes(shop)) {
+      return store.categoryListingMode ?? "brands";
+    }
+  }
+  return "brands";
+}
+
+function categoryListingModeForStore(store: StoreSlug): CategoryListingMode {
+  return STORES[store].categoryListingMode ?? "brands";
 }
 
 function parseAlbumElement(
@@ -190,7 +204,7 @@ function parseAlbumElement(
   )
     .replace(/\s+/g, " ")
     .trim();
-  if (!title || isHiddenAlbum(title) || isBlockedCategory(title, shop)) return null;
+  if (!title || isHiddenAlbum(title) || isBlockedListingTitle(title, shop)) return null;
 
   const imgEl = node.find("img.album__img, img[data-origin-src]").first();
   const img =
@@ -305,11 +319,21 @@ export function categoryKey(name: string) {
   return key.slice(0, 80) || "category";
 }
 
-function sortCategories(categories: CatalogCategory[]): CatalogCategory[] {
-  return sortBrandList(categories.filter((category) => isBrandListing(category.name)));
+function sortCategories(
+  categories: CatalogCategory[],
+  listingMode: CategoryListingMode = "brands",
+): CatalogCategory[] {
+  const list =
+    listingMode === "all"
+      ? categories
+      : categories.filter((category) => isBrandListing(category.name));
+  return sortBrandList(list);
 }
 
-function mergeCategories(pages: CatalogPage[]): CatalogCategory[] {
+function mergeCategories(
+  pages: CatalogPage[],
+  listingMode: CategoryListingMode = "brands",
+): CatalogCategory[] {
   const map = new Map<string, CatalogCategory>();
   for (const page of pages) {
     for (const category of page.categories) {
@@ -334,10 +358,14 @@ function mergeCategories(pages: CatalogPage[]): CatalogCategory[] {
       }
     }
   }
-  return sortCategories([...map.values()]);
+  return sortCategories([...map.values()], listingMode);
 }
 
-function combineListings(pages: CatalogPage[], page: number): CatalogPage {
+function combineListings(
+  pages: CatalogPage[],
+  page: number,
+  listingMode: CategoryListingMode = "brands",
+): CatalogPage {
   const seen = new Set<string>();
   const items: CatalogItem[] = [];
   for (const listing of pages) {
@@ -352,7 +380,7 @@ function combineListings(pages: CatalogPage[], page: number): CatalogPage {
     items,
     page,
     pageCount: Math.max(1, ...pages.map((listing) => listing.pageCount)),
-    categories: mergeCategories(pages),
+    categories: mergeCategories(pages, listingMode),
   };
 }
 
@@ -373,8 +401,9 @@ async function loadStoreShops(
 }
 
 export async function getStoreIndex(store: StoreSlug, page = 1) {
+  const listingMode = categoryListingModeForStore(store);
   const pages = await loadStoreShops(store, (slug) => getAlbumIndex(slug, page));
-  return combineListings(pages, page);
+  return combineListings(pages, page, listingMode);
 }
 
 export async function getStoreCategory(
@@ -401,7 +430,7 @@ export async function getStoreCategory(
     return listing;
   });
 
-  const combined = combineListings(pages, page);
+  const combined = combineListings(pages, page, categoryListingModeForStore(store));
   return {
     ...combined,
     categories: index.categories,

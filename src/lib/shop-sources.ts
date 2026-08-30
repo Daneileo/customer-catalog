@@ -7,6 +7,7 @@ export type ShopSource = {
   host: string;
   photoUser: string;
   blockedCategoryPatterns?: RegExp[];
+  blockedAlbumPatterns?: RegExp[];
 };
 
 export const SHOP_SOURCES: Record<ShopSlug, ShopSource> = {
@@ -40,6 +41,15 @@ export const SHOP_SOURCES: Record<ShopSlug, ShopSource> = {
     host: "wwfake100.x.yupoo.com",
     photoUser: "wwfake100",
     blockedCategoryPatterns: [/shopping guide/i, /recommended agents/i],
+    blockedAlbumPatterns: [
+      /order issues/i,
+      /social media/i,
+      /tiktok/i,
+      /collaborative promotion/i,
+      /rizzitgo/i,
+      /gtbuy/i,
+      /rat king logistics/i,
+    ],
   },
   yolo66: {
     slug: "yolo66",
@@ -51,6 +61,15 @@ export const SHOP_SOURCES: Record<ShopSlug, ShopSource> = {
       /how to (?:order|place)/i,
       /telegram/i,
       /wechat/i,
+    ],
+    blockedAlbumPatterns: [
+      /2025\s+talent cooperation/i,
+      /discount for wholesaler/i,
+      /view the qc pictures/i,
+      /ordering goods through/i,
+      /weidian purchases products/i,
+      /direct mail transport/i,
+      /taobao disguised link/i,
     ],
   },
   luxury233: {
@@ -65,8 +84,22 @@ export function getShopSource(slug: string): ShopSource | null {
   return isShopSlug(slug) ? SHOP_SOURCES[slug] : null;
 }
 
+function normalizeLabel(name: string) {
+  return name.replace(/\s+/g, " ").trim();
+}
+
 export function isBlockedCategory(name: string, shop: ShopSource) {
   if (!shop.blockedCategoryPatterns?.length) return false;
-  const normalized = name.replace(/\s+/g, " ").trim();
+  const normalized = normalizeLabel(name);
   return shop.blockedCategoryPatterns.some((pattern) => pattern.test(normalized));
+}
+
+export function isBlockedAlbum(title: string, shop: ShopSource) {
+  if (!shop.blockedAlbumPatterns?.length) return false;
+  const normalized = normalizeLabel(title);
+  return shop.blockedAlbumPatterns.some((pattern) => pattern.test(normalized));
+}
+
+export function isBlockedListingTitle(title: string, shop: ShopSource) {
+  return isBlockedCategory(title, shop) || isBlockedAlbum(title, shop);
 }

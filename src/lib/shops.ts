@@ -36,11 +36,15 @@ export const SHOPS: Record<ShopSlug, Shop> = {
   luxury233: { slug: "luxury233", name: "Luxury233", blurb: "Gallery" },
 };
 
+export type CategoryListingMode = "brands" | "all";
+
 export type Store = {
   slug: StoreSlug;
   name: string;
   blurb: string;
   shops: ShopSlug[];
+  /** Show every Yupoo category in Brands (minus blocked ones). Default: decoded brands only. */
+  categoryListingMode?: CategoryListingMode;
 };
 
 export const STORES: Record<StoreSlug, Store> = {
@@ -64,6 +68,7 @@ export const STORES: Record<StoreSlug, Store> = {
     blurb:
       "All items, or pick a brand. Open any item for photos — nothing links away from this site.",
     shops: ["chaosmade"],
+    categoryListingMode: "all",
   },
   "many-shoes-1": {
     slug: "many-shoes-1",
@@ -71,6 +76,7 @@ export const STORES: Record<StoreSlug, Store> = {
     blurb:
       "All items, or pick a brand. Open any item for photos — nothing links away from this site.",
     shops: ["wwfake100"],
+    categoryListingMode: "all",
   },
   "many-shoes-2": {
     slug: "many-shoes-2",
@@ -78,6 +84,7 @@ export const STORES: Record<StoreSlug, Store> = {
     blurb:
       "All items, or pick a brand. Open any item for photos — nothing links away from this site.",
     shops: ["yolo66"],
+    categoryListingMode: "all",
   },
   "luxurybrand-shoes1": {
     slug: "luxurybrand-shoes1",
@@ -85,6 +92,7 @@ export const STORES: Record<StoreSlug, Store> = {
     blurb:
       "All items, or pick a brand. Open any item for photos — nothing links away from this site.",
     shops: ["luxury233"],
+    categoryListingMode: "all",
   },
 };
 
