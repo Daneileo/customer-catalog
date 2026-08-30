@@ -9,7 +9,7 @@ import {
   getItem,
   type ItemDetail,
 } from "@/lib/catalog";
-import { getShop, WHATSAPP_DISPLAY, whatsappLink } from "@/lib/shops";
+import { SITE_NAME, WHATSAPP_DISPLAY, getShop, whatsappLink } from "@/lib/shops";
 import { parseProductTitle } from "@/lib/titles";
 
 export const revalidate = 300;
@@ -55,7 +55,7 @@ export default async function ItemPage({
       <CatalogError
         title="Item unavailable"
         message={message ?? undefined}
-        href={`/${shop.slug}`}
+        href="/"
       />
     );
   }
@@ -66,11 +66,11 @@ export default async function ItemPage({
   return (
     <div className="space-y-6">
       <Link
-        href={`/${shop.slug}`}
+        href="/"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-4" />
-        Back to {shop.name}
+        Back to {SITE_NAME}
       </Link>
 
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
@@ -102,7 +102,7 @@ export default async function ItemPage({
             </div>
             <div className="rounded-lg bg-muted px-3 py-2">
               <dt className="text-xs text-muted-foreground">Catalog</dt>
-              <dd className="font-medium">{shop.name}</dd>
+              <dd className="font-medium">{SITE_NAME}</dd>
             </div>
           </dl>
 

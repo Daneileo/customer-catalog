@@ -1,14 +1,14 @@
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { CategoryChips } from "@/components/category-chips";
 import { CatalogError } from "@/components/catalog-error";
 import { PaginationBar } from "@/components/pagination-bar";
 import { ProductGrid } from "@/components/product-grid";
 import {
   CatalogError as FeedError,
-  searchCatalog,
+  searchCombined,
   type CatalogPage,
 } from "@/lib/catalog";
-import { getShop } from "@/lib/shops";
+import { SITE_NAME } from "@/lib/shops";
 
 export const revalidate = 120;
 
@@ -22,27 +22,21 @@ export async function generateMetadata({
 }
 
 export default async function SearchPage({
-  params,
   searchParams,
 }: {
-  params: Promise<{ shop: string }>;
   searchParams: Promise<{ q?: string; page?: string }>;
 }) {
-  const { shop: slug } = await params;
-  const shop = getShop(slug);
-  if (!shop) notFound();
-
   const query = (await searchParams).q?.trim() || "";
   const page = Math.max(1, Number((await searchParams).page) || 1);
 
   if (!query) {
-    redirect(`/${shop.slug}`);
+    redirect("/");
   }
 
   let data: CatalogPage | null = null;
   let message: string | null = null;
   try {
-    data = await searchCatalog(shop.slug, query, page);
+    data = await searchCombined(query, page);
   } catch (error) {
     message =
       error instanceof FeedError
@@ -51,7 +45,7 @@ export default async function SearchPage({
   }
 
   if (!data) {
-    return <CatalogError message={message ?? undefined} href={`/${shop.slug}`} />;
+    return <CatalogError message={message ?? undefined} href="/" />;
   }
 
   return (
@@ -61,13 +55,13 @@ export default async function SearchPage({
           Search
         </h1>
         <p className="text-sm text-muted-foreground">
-          Results for “{query}” in {shop.name}.
+          Results for “{query}” in {SITE_NAME}.
         </p>
       </div>
-      <CategoryChips shop={shop.slug} categories={data.categories} />
+      <CategoryChips categories={data.categories} />
       <ProductGrid items={data.items} />
       <PaginationBar
-        pathname={`/${shop.slug}/search`}
+        pathname="/search"
         page={data.page}
         pageCount={data.pageCount}
         query={{ q: query }}

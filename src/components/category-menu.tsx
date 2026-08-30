@@ -3,15 +3,12 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
-import type { ShopSlug } from "@/lib/shops";
 
 type Category = { id: string; name: string };
 
 export function CategoryMenu({
-  shop,
   categories,
 }: {
-  shop: ShopSlug;
   categories: Category[];
 }) {
   const pathname = usePathname();
@@ -58,7 +55,7 @@ export function CategoryMenu({
           </div>
           <div className="min-h-0 flex-1 overflow-y-auto px-2 py-3">
             <Link
-              href={`/${shop}`}
+              href="/"
               className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted"
             >
               All items
@@ -71,7 +68,7 @@ export function CategoryMenu({
               categories.map((category) => (
                 <Link
                   key={category.id}
-                  href={`/${shop}/c/${category.id}`}
+                  href={`/c/${category.id}`}
                   className="block rounded-lg px-3 py-2 text-sm hover:bg-muted"
                 >
                   {category.name}

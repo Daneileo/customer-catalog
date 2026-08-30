@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Catalog",
-    template: "%s · Catalog",
+    default: "Sirius",
+    template: "%s · Sirius",
   },
   description:
     "Product catalog with photos. Item pages stay on this site — no supplier links.",

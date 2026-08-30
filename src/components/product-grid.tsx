@@ -4,7 +4,7 @@ import type { CatalogItem } from "@/lib/catalog";
 export function ProductCard({ item }: { item: CatalogItem }) {
   return (
     <Link
-      href={`/${item.shop}/item/${item.id}`}
+      href={`/item/${item.shop}/${item.id}`}
       className="group overflow-hidden rounded-xl border bg-card shadow-xs transition-colors hover:border-foreground/20"
     >
       <div className="relative aspect-square overflow-hidden bg-muted">

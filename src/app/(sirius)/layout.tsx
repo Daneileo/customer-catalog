@@ -1,24 +1,17 @@
 import { Suspense } from "react";
-import { notFound } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
-import { getAlbumIndex } from "@/lib/catalog";
-import { WHATSAPP_DISPLAY, whatsappLink, getShop, type ShopSlug } from "@/lib/shops";
+import { getCombinedIndex } from "@/lib/catalog";
+import { WHATSAPP_DISPLAY, whatsappLink } from "@/lib/shops";
 
-export default async function ShopLayout({
+export default function CatalogLayout({
   children,
-  params,
 }: {
   children: React.ReactNode;
-  params: Promise<{ shop: string }>;
 }) {
-  const { shop: slug } = await params;
-  const shop = getShop(slug);
-  if (!shop) notFound();
-
   return (
     <>
-      <Suspense fallback={<SiteHeader shop={shop.slug} categories={[]} />}>
-        <ShopHeader shop={shop.slug} />
+      <Suspense fallback={<SiteHeader categories={[]} />}>
+        <CatalogHeader />
       </Suspense>
       <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col px-4 py-6 sm:px-6">
         {children}
@@ -40,13 +33,13 @@ export default async function ShopLayout({
   );
 }
 
-async function ShopHeader({ shop }: { shop: ShopSlug }) {
+async function CatalogHeader() {
   let categories: { id: string; name: string }[] = [];
   try {
-    const listing = await getAlbumIndex(shop, 1);
+    const listing = await getCombinedIndex(1);
     categories = listing.categories;
   } catch {
     categories = [];
   }
-  return <SiteHeader shop={shop} categories={categories} />;
+  return <SiteHeader categories={categories} />;
 }

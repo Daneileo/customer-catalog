@@ -1,13 +1,10 @@
-# Catalog
+# Sirius
 
 A storefront for the same albums and photos as the supplier galleries, with **no outbound product links**. Clicking an item opens a photo page on this site. Supplier gallery URLs are never shown in the UI, and images are proxied so the browser does not load those hosts.
 
-Three catalogs are included as shop tabs:
+**Sirius** combines the Taurus, Scorpio, and Pisces galleries into one catalog.
 
-- **Taurus** — the main gallery from the albums URL you sent
-- **Scorpio** and **Pisces** — the other two galleries listed on that seller page
-
-Albums that exist only to share other gallery links (for example “NEW YUPOO”) or agent how-to posts are omitted. Item descriptions that contain marketplace or gallery URLs are stripped.
+Albums that exist only to share other gallery links or agent how-to posts are omitted. Item descriptions that contain marketplace or gallery URLs are stripped. Yen prices are not shown.
 
 ## Run locally
 
@@ -16,17 +13,16 @@ npm install
 npm run dev
 ```
 
-Open [http://localhost:43141](http://localhost:43141). The home page loads the Taurus catalog.
+Open [http://localhost:43141](http://localhost:43141).
 
 WhatsApp orders use `+1 (416) 245-9504`.
 
 ## What you get
 
-- Grid of items with photos and restored brand names
-- Category chips plus a searchable category drawer
-- Search across the selected catalog
+- One combined grid of items from all three galleries
+- Category chips plus a category drawer
+- Search across the full catalog
 - Item pages with a photo gallery / lightbox
-- Shop tabs to switch catalogs
 - Loading, empty, and error states
 
 ## Notes

@@ -1,3 +1,4 @@
+export const SITE_NAME = "Sirius";
 export const WHATSAPP_NUMBER = "14162459504";
 export const WHATSAPP_DISPLAY = "+1 (416) 245-9504";
 

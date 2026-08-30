@@ -8,7 +8,7 @@ export default function NotFound() {
       <p className="mt-2 text-sm text-muted-foreground">
         That catalog page does not exist.
       </p>
-      <Button nativeButton={false} className="mt-6" render={<Link href="/taurus" />}>
+      <Button nativeButton={false} className="mt-6" render={<Link href="/" />}>
         Go to catalog
       </Button>
     </div>

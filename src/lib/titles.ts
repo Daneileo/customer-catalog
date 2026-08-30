@@ -48,7 +48,9 @@ export function parseProductTitle(raw: string): ParsedTitle {
 export function stripYenPrices(value: string) {
   return value
     .replace(/[￥¥]\s*\d+\s*←\s*\d+/g, " ")
+    .replace(/\d+\s*[￥¥]\s*←\s*\d+/g, " ")
     .replace(/[￥¥]\s*\d+/g, " ")
+    .replace(/\d+\s*[￥¥]/g, " ")
     .replace(/\bTOP\b/gi, " ")
     .replace(/\s+/g, " ")
     .trim();
