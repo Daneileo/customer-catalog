@@ -14,11 +14,11 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Medved",
+    default: "Catalog",
     template: "%s",
   },
   description:
-    "Medved and Mishka product catalogs with photos. Item pages stay on this site — no supplier links.",
+    "Product catalogs with photos. Item pages stay on this site — no supplier links.",
   referrer: "no-referrer",
   robots: { index: false, follow: false },
 };

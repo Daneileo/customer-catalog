@@ -9,6 +9,6 @@ export default async function ItemShopLayout({
   params: Promise<{ shop: string }>;
 }) {
   const { shop } = await params;
-  const store = isShopSlug(shop) ? storeForShop(shop) : "medved";
+  const store = isShopSlug(shop) ? storeForShop(shop) : "manybrands-1";
   return <CatalogChrome store={store}>{children}</CatalogChrome>;
 }

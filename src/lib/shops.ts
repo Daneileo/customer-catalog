@@ -1,8 +1,23 @@
 export const WHATSAPP_NUMBER = "14162459504";
 export const WHATSAPP_DISPLAY = "+1 (416) 245-9504";
 
-export type ShopSlug = "taurus" | "scorpio" | "pisces" | "husky";
-export type StoreSlug = "medved" | "mishka";
+export type ShopSlug =
+  | "taurus"
+  | "scorpio"
+  | "pisces"
+  | "husky"
+  | "chaosmade"
+  | "wwfake100"
+  | "yolo66"
+  | "luxury233";
+
+export type StoreSlug =
+  | "manybrands-1"
+  | "manybrands-2"
+  | "manybrands-3"
+  | "many-shoes-1"
+  | "many-shoes-2"
+  | "luxurybrand-shoes1";
 
 export type Shop = {
   slug: ShopSlug;
@@ -11,26 +26,14 @@ export type Shop = {
 };
 
 export const SHOPS: Record<ShopSlug, Shop> = {
-  taurus: {
-    slug: "taurus",
-    name: "Taurus",
-    blurb: "Main catalog",
-  },
-  scorpio: {
-    slug: "scorpio",
-    name: "Scorpio",
-    blurb: "Second catalog",
-  },
-  pisces: {
-    slug: "pisces",
-    name: "Pisces",
-    blurb: "Third catalog",
-  },
-  husky: {
-    slug: "husky",
-    name: "Mishka",
-    blurb: "Mishka catalog",
-  },
+  taurus: { slug: "taurus", name: "Taurus", blurb: "Gallery" },
+  scorpio: { slug: "scorpio", name: "Scorpio", blurb: "Gallery" },
+  pisces: { slug: "pisces", name: "Pisces", blurb: "Gallery" },
+  husky: { slug: "husky", name: "Husky", blurb: "Gallery" },
+  chaosmade: { slug: "chaosmade", name: "Chaosmade", blurb: "Gallery" },
+  wwfake100: { slug: "wwfake100", name: "WWFake100", blurb: "Gallery" },
+  yolo66: { slug: "yolo66", name: "Yolo66", blurb: "Gallery" },
+  luxury233: { slug: "luxury233", name: "Luxury233", blurb: "Gallery" },
 };
 
 export type Store = {
@@ -41,20 +44,59 @@ export type Store = {
 };
 
 export const STORES: Record<StoreSlug, Store> = {
-  medved: {
-    slug: "medved",
-    name: "Medved",
+  "manybrands-1": {
+    slug: "manybrands-1",
+    name: "manybrands-1",
     blurb:
       "All items, or pick a brand. Open any item for photos — nothing links away from this site.",
     shops: ["taurus", "scorpio", "pisces"],
   },
-  mishka: {
-    slug: "mishka",
-    name: "Mishka",
+  "manybrands-2": {
+    slug: "manybrands-2",
+    name: "manybrands-2",
     blurb:
       "All items, or pick a brand. Open any item for photos — nothing links away from this site.",
     shops: ["husky"],
   },
+  "manybrands-3": {
+    slug: "manybrands-3",
+    name: "manybrands-3",
+    blurb:
+      "All items, or pick a brand. Open any item for photos — nothing links away from this site.",
+    shops: ["chaosmade"],
+  },
+  "many-shoes-1": {
+    slug: "many-shoes-1",
+    name: "many shoes-1",
+    blurb:
+      "All items, or pick a brand. Open any item for photos — nothing links away from this site.",
+    shops: ["wwfake100"],
+  },
+  "many-shoes-2": {
+    slug: "many-shoes-2",
+    name: "many shoes-2",
+    blurb:
+      "All items, or pick a brand. Open any item for photos — nothing links away from this site.",
+    shops: ["yolo66"],
+  },
+  "luxurybrand-shoes1": {
+    slug: "luxurybrand-shoes1",
+    name: "luxurybrand-shoes1",
+    blurb:
+      "All items, or pick a brand. Open any item for photos — nothing links away from this site.",
+    shops: ["luxury233"],
+  },
+};
+
+const SHOP_TO_STORE: Record<ShopSlug, StoreSlug> = {
+  taurus: "manybrands-1",
+  scorpio: "manybrands-1",
+  pisces: "manybrands-1",
+  husky: "manybrands-2",
+  chaosmade: "manybrands-3",
+  wwfake100: "many-shoes-1",
+  yolo66: "many-shoes-2",
+  luxury233: "luxurybrand-shoes1",
 };
 
 export const STORE_LIST = Object.values(STORES);
@@ -76,15 +118,15 @@ export function getStore(slug: string): Store | null {
 }
 
 export function storeForShop(shop: ShopSlug): StoreSlug {
-  return shop === "husky" ? "mishka" : "medved";
+  return SHOP_TO_STORE[shop];
 }
 
 export function storeBasePath(store: StoreSlug) {
-  return store === "medved" ? "" : `/${store}`;
+  return `/${store}`;
 }
 
 export function storeHome(store: StoreSlug) {
-  return store === "medved" ? "/" : `/${store}`;
+  return storeBasePath(store);
 }
 
 export function storeSearchPath(store: StoreSlug) {
@@ -102,7 +144,7 @@ export function catalogHome(
   mode: CatalogMode = "storefront",
 ) {
   if (mode === "master") {
-    return store === "mishka" ? "/master/mishka" : "/master";
+    return `/master/${store}`;
   }
   return storeHome(store);
 }
@@ -112,7 +154,7 @@ export function catalogSearchPath(
   mode: CatalogMode = "storefront",
 ) {
   if (mode === "master") {
-    return store === "mishka" ? "/master/mishka/search" : "/master/search";
+    return `/master/${store}/search`;
   }
   return storeSearchPath(store);
 }
@@ -123,8 +165,7 @@ export function catalogCategoryPath(
   mode: CatalogMode = "storefront",
 ) {
   if (mode === "master") {
-    const base = store === "mishka" ? "/master/mishka" : "/master";
-    return `${base}/c/${categoryId}`;
+    return `/master/${store}/c/${categoryId}`;
   }
   return storeCategoryPath(store, categoryId);
 }

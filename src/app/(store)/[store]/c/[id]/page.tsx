@@ -1,3 +1,4 @@
+import { notFound } from "next/navigation";
 import { CatalogError } from "@/components/catalog-error";
 import { CatalogListing } from "@/components/catalog-listing";
 import {
@@ -5,39 +6,44 @@ import {
   getStoreCategory,
   type CatalogPage,
 } from "@/lib/catalog";
-import { catalogCategoryPath, catalogHome } from "@/lib/shops";
+import { STORES, getStore, storeCategoryPath, storeHome } from "@/lib/shops";
 
 export const revalidate = 300;
 
 export async function generateMetadata({
   params,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ store: string; id: string }>;
 }) {
-  const { id } = await params;
+  const { store: storeSlug, id } = await params;
+  const store = getStore(storeSlug);
+  if (!store) return { title: "Category" };
   try {
-    const data = await getStoreCategory("medved", id, 1);
+    const data = await getStoreCategory(store.slug, id, 1);
     const current = data.categories.find((category) => category.id === id);
-    return { title: current ? `${current.name} · master` : "Category" };
+    return { title: current?.name || "Category" };
   } catch {
     return { title: "Category" };
   }
 }
 
-export default async function MasterMedvedCategoryPage({
+export default async function StoreCategoryPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ id: string }>;
+  params: Promise<{ store: string; id: string }>;
   searchParams: Promise<{ page?: string }>;
 }) {
-  const { id } = await params;
+  const { store: storeSlug, id } = await params;
+  const store = getStore(storeSlug);
+  if (!store) notFound();
+
   const page = Math.max(1, Number((await searchParams).page) || 1);
 
   let data: CatalogPage | null = null;
   let message: string | null = null;
   try {
-    data = await getStoreCategory("medved", id, page);
+    data = await getStoreCategory(store.slug, id, page);
   } catch (error) {
     message =
       error instanceof FeedError
@@ -47,10 +53,7 @@ export default async function MasterMedvedCategoryPage({
 
   if (!data) {
     return (
-      <CatalogError
-        message={message ?? undefined}
-        href={catalogHome("medved", "master")}
-      />
+      <CatalogError message={message ?? undefined} href={storeHome(store.slug)} />
     );
   }
 
@@ -58,13 +61,16 @@ export default async function MasterMedvedCategoryPage({
 
   return (
     <CatalogListing
-      store="medved"
-      mode="master"
+      store={store.slug}
       title={current?.name || "Category"}
-      description="Master view of this brand — prices and album links included."
+      description="Items from this brand. Click through for photos on this site only."
       data={data}
-      pathname={catalogCategoryPath("medved", id, "master")}
+      pathname={storeCategoryPath(store.slug, id)}
       activeCategoryId={id}
     />
   );
+}
+
+export function generateStaticParams() {
+  return Object.keys(STORES).map((store) => ({ store }));
 }

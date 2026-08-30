@@ -21,30 +21,37 @@ export function SiteHeader({
   categories,
   mode = "storefront",
 }: {
-  store: StoreSlug;
+  store?: StoreSlug | null;
   categories: Category[];
   mode?: CatalogMode;
 }) {
-  const current = STORE_LIST.find((entry) => entry.slug === store) ?? STORE_LIST[0];
+  const current = store ? STORE_LIST.find((entry) => entry.slug === store) : null;
   const master = mode === "master";
+  const intro = !store;
 
   return (
     <header className="sticky top-0 z-40 overflow-visible border-b bg-background">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-2">
-          <CategoryMenu store={store} categories={categories} mode={mode} />
+          {store ? (
+            <CategoryMenu store={store} categories={categories} mode={mode} />
+          ) : (
+            <div className="size-10 shrink-0" aria-hidden />
+          )}
           <div className="min-w-0 flex-1">
             <p className="font-heading text-lg font-semibold tracking-tight">
-              {current.name}
+              {intro ? "HOW TO ORDER" : current?.name}
               {master ? " · Master" : ""}
             </p>
             <p className="truncate text-xs text-muted-foreground">
-              {master
-                ? "Local only. Prices and album links — not on the published site."
-                : "Browse items. Photos only — no supplier links."}
+              {intro
+                ? "Start here, then pick a catalog below."
+                : master
+                  ? "Local only. Prices and album links — not on the published site."
+                  : "Browse items. Photos only — no supplier links."}
             </p>
           </div>
-          {master ? (
+          {master && store ? (
             <Button
               nativeButton={false}
               render={<Link href={storeHome(store)} />}
@@ -72,7 +79,21 @@ export function SiteHeader({
           )}
         </div>
 
-        <nav className="flex gap-1" aria-label="Catalogs">
+        <nav
+          className="flex flex-wrap gap-1"
+          aria-label="Catalogs"
+        >
+          <Link
+            href="/"
+            className={cn(
+              "rounded-full px-3 py-1.5 text-sm",
+              intro
+                ? "bg-foreground text-background"
+                : "bg-muted text-muted-foreground hover:text-foreground",
+            )}
+          >
+            Home
+          </Link>
           {STORE_LIST.map((entry) => {
             const active = entry.slug === store;
             return (
@@ -92,8 +113,12 @@ export function SiteHeader({
           })}
         </nav>
 
-        <BrandNav store={store} categories={categories} mode={mode} />
-        <SearchForm store={store} mode={mode} />
+        {store ? (
+          <>
+            <BrandNav store={store} categories={categories} mode={mode} />
+            <SearchForm store={store} mode={mode} />
+          </>
+        ) : null}
       </div>
     </header>
   );

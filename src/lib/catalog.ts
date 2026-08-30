@@ -1,7 +1,12 @@
 import "server-only";
 
 import * as cheerio from "cheerio";
-import { getShopSource, type ShopSource } from "@/lib/shop-sources";
+import type { Element } from "domhandler";
+import {
+  getShopSource,
+  isBlockedCategory,
+  type ShopSource,
+} from "@/lib/shop-sources";
 import {
   STORES,
   type ShopSlug,
@@ -78,7 +83,7 @@ export class CatalogError extends Error {
 }
 
 const SKIP_ALBUM =
-  /^(?:discord|whatsapp\b|how to use\b)/i;
+  /^(?:discord|whatsapp\b|how to use\b|how to (?:order|purchase|place)|shopping guide|recommended agents|weidian guide)/i;
 const SKIP_CATEGORY = /^(?:临时隐藏|单独隐藏)$/;
 
 export function isHiddenAlbum(title: string) {
@@ -141,7 +146,7 @@ function parsePageCount($: cheerio.CheerioAPI) {
   return match ? Number(match[1]) : 1;
 }
 
-function parseCategories($: cheerio.CheerioAPI) {
+function parseCategories($: cheerio.CheerioAPI, shop: ShopSource) {
   const categories = new Map<string, string>();
 
   $(".showheader__categoryList a[href^='/categories/']").each((_, el) => {
@@ -149,7 +154,14 @@ function parseCategories($: cheerio.CheerioAPI) {
     const id = href.match(/\/categories\/(\d+)/)?.[1];
     if (!id || id === "0") return;
     const name = restoreBrands($(el).text().replace(/\s+/g, " ").trim());
-    if (!name || isHiddenCategory(name) || !isBrandListing(name)) return;
+    if (
+      !name ||
+      isHiddenCategory(name) ||
+      isBlockedCategory(name, shop) ||
+      !isBrandListing(name)
+    ) {
+      return;
+    }
     categories.set(id, name);
   });
 
@@ -160,48 +172,61 @@ function parseCategories($: cheerio.CheerioAPI) {
   }));
 }
 
+function parseAlbumElement(
+  $: cheerio.CheerioAPI,
+  el: Element,
+  shop: ShopSource,
+): CatalogItem | null {
+  const node = $(el);
+  const href = node.attr("href") || "";
+  const id =
+    href.match(/\/albums\/(\d+)/)?.[1] || node.attr("data-album-id") || "";
+  if (!id) return null;
+
+  const title = (
+    node.attr("title") ||
+    node.find(".album__title").text() ||
+    ""
+  )
+    .replace(/\s+/g, " ")
+    .trim();
+  if (!title || isHiddenAlbum(title) || isBlockedCategory(title, shop)) return null;
+
+  const imgEl = node.find("img.album__img, img[data-origin-src]").first();
+  const img =
+    imgEl.attr("data-origin-src") ||
+    imgEl.attr("data-src") ||
+    imgEl.attr("src") ||
+    node.find("img").attr("data-origin-src") ||
+    node.find("img").attr("data-src") ||
+    node.find("img").attr("src") ||
+    "";
+  const coverSrc = proxySrc(shop, img);
+  if (!coverSrc) return null;
+
+  const photoCount = Number(
+    node.find(".album__photonumber").text().trim() || "0",
+  );
+  const parsed = parseProductTitle(title);
+
+  return {
+    id,
+    shop: shop.slug,
+    title: parsed.raw,
+    photoCount,
+    coverSrc: preferMedium(coverSrc),
+    price: parsed.salePrice ?? parsed.prices[0],
+    originalPrice: parsed.originalPrice,
+    sourceUrl: `https://${shop.host}/albums/${id}`,
+  };
+}
+
 function parseItems($: cheerio.CheerioAPI, shop: ShopSource): CatalogItem[] {
   const items: CatalogItem[] = [];
 
-  $("a.album__main").each((_, el) => {
-    const href = $(el).attr("href") || "";
-    const id = href.match(/\/albums\/(\d+)/)?.[1];
-    if (!id) return;
-
-    const title = (
-      $(el).attr("title") ||
-      $(el).find(".album__title").text() ||
-      ""
-    )
-      .replace(/\s+/g, " ")
-      .trim();
-    if (!title || isHiddenAlbum(title)) return;
-
-    const imgEl = $(el).find("img.album__img");
-    const img =
-      imgEl.attr("src") ||
-      imgEl.attr("data-src") ||
-      $(el).find("img").attr("src") ||
-      $(el).find("img").attr("data-src") ||
-      "";
-    const coverSrc = proxySrc(shop, img);
-    if (!coverSrc) return;
-
-    const photoCount = Number(
-      $(el).find(".album__photonumber").text().trim() || "0",
-    );
-    const parsed = parseProductTitle(title);
-
-    items.push({
-      id,
-      shop: shop.slug,
-      title: parsed.raw,
-      photoCount,
-      coverSrc: preferMedium(coverSrc),
-      price: parsed.salePrice ?? parsed.prices[0],
-      originalPrice: parsed.originalPrice,
-      sourceUrl: `https://${shop.host}/albums/${id}`,
-    });
+  $("a.album__main, a.album3__main").each((_, el) => {
+    const item = parseAlbumElement($, el, shop);
+    if (item) items.push(item);
   });
 
   return items;
@@ -237,7 +262,7 @@ async function loadListing(
     items: parseItems($, shop),
     page,
     pageCount: Math.max(1, parsePageCount($)),
-    categories: parseCategories($).map((category) => ({
+    categories: parseCategories($, shop).map((category) => ({
       ...category,
       sources: [{ shop: shop.slug, id: category.id }],
     })),
@@ -526,15 +551,15 @@ export async function searchStore(store: StoreSlug, query: string, page = 1) {
 }
 
 export async function getCombinedIndex(page = 1) {
-  return getStoreIndex("medved", page);
+  return getStoreIndex("manybrands-1", page);
 }
 
 export async function getCombinedCategory(slug: string, page = 1) {
-  return getStoreCategory("medved", slug, page);
+  return getStoreCategory("manybrands-1", slug, page);
 }
 
 export async function searchCombined(query: string, page = 1) {
-  return searchStore("medved", query, page);
+  return searchStore("manybrands-1", query, page);
 }
 
 function parsePhotos($: cheerio.CheerioAPI, shop: ShopSource): CatalogPhoto[] {

@@ -2,25 +2,26 @@
 
 This repo is the **customer catalog** — the site you publish. Customers see photos only. There are no supplier links, no yuan prices, and no path to the master copy.
 
-Two catalogs:
+## Home
 
-- **Medved** — combined Taurus, Scorpio, and Pisces galleries (`/`)
-- **Mishka** — the Mishka gallery (`/mishka`)
+**/** — **HOW TO ORDER** intro page. Pick a catalog from the tabs to start browsing.
 
-**All** shows every item. Hover or tap **Brands** for the full brand list (decoded names). Opening a brand shows that brand’s items, same as the original galleries.
+## Catalogs
 
-The search bar is on every page. Type any text from an item title — including a SKU like `502221671` — and press **Search** (or Enter) to see matching items in that catalog.
+| Tab | URL | Source |
+| --- | --- | --- |
+| manybrands-1 | `/manybrands-1` | Taurus, Scorpio, Pisces |
+| manybrands-2 | `/manybrands-2` | Husky |
+| manybrands-3 | `/manybrands-3` | chaosmade.x.yupoo.com |
+| many shoes-1 | `/many-shoes-1` | wwfake100.x.yupoo.com |
+| many shoes-2 | `/many-shoes-2` | yolo66.x.yupoo.com |
+| luxurybrand-shoes1 | `/luxurybrand-shoes1` | 2335499519.x.yupoo.com |
 
-Albums that exist only to share other gallery links or agent how-to posts are omitted. Item descriptions that contain marketplace or gallery URLs are stripped. Yuan / yen prices are not shown.
+Each catalog has **All**, **Brands**, search, and item photo pages. Old names redirect (`/medved` → `/manybrands-1`, `/mishka` → `/manybrands-2`).
 
 ## Master copy (local only)
 
-The master copy with prices and album links is **not published**. It only runs on your machine with `npm run dev`:
-
-- Medved: [http://localhost:43141/master](http://localhost:43141/master)
-- Mishka: [http://localhost:43141/master/mishka](http://localhost:43141/master/mishka)
-
-On a production deploy, `/master` returns a not-found page. Download CSV from a master listing while you are local.
+Prices and album links at `/master/{catalog}` — only in `npm run dev`, not on production.
 
 ## Run locally
 
@@ -29,6 +30,6 @@ npm install
 npm run dev
 ```
 
-Customer site: [http://localhost:43141](http://localhost:43141).
+Open [http://localhost:43141](http://localhost:43141).
 
 WhatsApp orders use `+1 (416) 245-9504`.

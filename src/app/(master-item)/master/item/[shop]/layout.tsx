@@ -13,7 +13,7 @@ export default async function MasterItemShopLayout({
   if (!isMasterEnabled()) notFound();
 
   const { shop } = await params;
-  const store = isShopSlug(shop) ? storeForShop(shop) : "medved";
+  const store = isShopSlug(shop) ? storeForShop(shop) : "manybrands-1";
   return (
     <CatalogChrome store={store} mode="master">
       {children}
