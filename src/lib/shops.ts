@@ -6,8 +6,6 @@ export type ShopSlug = "taurus" | "scorpio" | "pisces";
 export type Shop = {
   slug: ShopSlug;
   name: string;
-  host: string;
-  photoUser: string;
   blurb: string;
 };
 
@@ -15,22 +13,16 @@ export const SHOPS: Record<ShopSlug, Shop> = {
   taurus: {
     slug: "taurus",
     name: "Taurus",
-    host: "deateath.x.yupoo.com",
-    photoUser: "deateath",
     blurb: "Main catalog",
   },
   scorpio: {
     slug: "scorpio",
     name: "Scorpio",
-    host: "scorpio-reps.x.yupoo.com",
-    photoUser: "scorpio-reps",
     blurb: "Second catalog",
   },
   pisces: {
     slug: "pisces",
     name: "Pisces",
-    host: "pisces-reps.x.yupoo.com",
-    photoUser: "pisces-reps",
     blurb: "Third catalog",
   },
 };

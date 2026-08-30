@@ -1,5 +1,8 @@
+import "server-only";
+
 import * as cheerio from "cheerio";
-import { getShop, type Shop, type ShopSlug } from "@/lib/shops";
+import { getShopSource, type ShopSource } from "@/lib/shop-sources";
+import type { ShopSlug } from "@/lib/shops";
 import { parseProductTitle, sanitizeCopy } from "@/lib/titles";
 
 const USER_AGENT =
@@ -47,7 +50,15 @@ export class CatalogError extends Error {
   }
 }
 
-function proxySrc(shop: Shop, url: string | undefined | null) {
+const SKIP_ALBUM =
+  /^(?:new yupoo|discord|whatsapp\b|how to use\b)/i;
+
+export function isHiddenAlbum(title: string) {
+  const normalized = title.replace(/[🔥\s]+/g, " ").trim();
+  return SKIP_ALBUM.test(normalized);
+}
+
+function proxySrc(shop: ShopSource, url: string | undefined | null) {
   if (!url) return null;
   try {
     const parsed = new URL(url, `https://${shop.host}`);
@@ -112,7 +123,7 @@ function parseCategories($: cheerio.CheerioAPI) {
   return [...categories.entries()].map(([id, name]) => ({ id, name }));
 }
 
-function parseItems($: cheerio.CheerioAPI, shop: Shop): CatalogItem[] {
+function parseItems($: cheerio.CheerioAPI, shop: ShopSource): CatalogItem[] {
   const items: CatalogItem[] = [];
 
   $("a.album__main").each((_, el) => {
@@ -127,7 +138,7 @@ function parseItems($: cheerio.CheerioAPI, shop: Shop): CatalogItem[] {
     )
       .replace(/\s+/g, " ")
       .trim();
-    if (!title) return;
+    if (!title || isHiddenAlbum(title)) return;
 
     const img =
       $(el).find("img.album__img").attr("src") ||
@@ -156,7 +167,7 @@ function parseItems($: cheerio.CheerioAPI, shop: Shop): CatalogItem[] {
 }
 
 function listingUrl(
-  shop: Shop,
+  shop: ShopSource,
   kind: "albums" | "category" | "search",
   page: number,
   extra?: { categoryId?: string; query?: string },
@@ -174,7 +185,7 @@ function listingUrl(
 }
 
 async function loadListing(
-  shop: Shop,
+  shop: ShopSource,
   kind: "albums" | "category" | "search",
   page: number,
   extra?: { categoryId?: string; query?: string },
@@ -190,7 +201,7 @@ async function loadListing(
 }
 
 export async function getAlbumIndex(slug: ShopSlug, page = 1) {
-  const shop = getShop(slug);
+  const shop = getShopSource(slug);
   if (!shop) throw new CatalogError("Unknown catalog");
   return loadListing(shop, "albums", page);
 }
@@ -200,14 +211,14 @@ export async function getCategoryPage(
   categoryId: string,
   page = 1,
 ) {
-  const shop = getShop(slug);
+  const shop = getShopSource(slug);
   if (!shop) throw new CatalogError("Unknown catalog");
   if (!/^\d+$/.test(categoryId)) throw new CatalogError("Unknown category");
   return loadListing(shop, "category", page, { categoryId });
 }
 
 export async function searchCatalog(slug: ShopSlug, query: string, page = 1) {
-  const shop = getShop(slug);
+  const shop = getShopSource(slug);
   if (!shop) throw new CatalogError("Unknown catalog");
   const q = query.trim();
   if (!q) {
@@ -216,7 +227,7 @@ export async function searchCatalog(slug: ShopSlug, query: string, page = 1) {
   return loadListing(shop, "search", page, { query: q });
 }
 
-function parsePhotos($: cheerio.CheerioAPI, shop: Shop): CatalogPhoto[] {
+function parsePhotos($: cheerio.CheerioAPI, shop: ShopSource): CatalogPhoto[] {
   const photos: CatalogPhoto[] = [];
 
   $(".image__main img.image__img").each((_, el) => {
@@ -241,7 +252,7 @@ function parsePhotos($: cheerio.CheerioAPI, shop: Shop): CatalogPhoto[] {
   return photos;
 }
 
-async function fetchAlbumPage(shop: Shop, id: string, page: number) {
+async function fetchAlbumPage(shop: ShopSource, id: string, page: number) {
   const url = new URL(`https://${shop.host}/albums/${id}`);
   url.searchParams.set("uid", "1");
   if (page > 1) url.searchParams.set("page", String(page));
@@ -249,7 +260,7 @@ async function fetchAlbumPage(shop: Shop, id: string, page: number) {
 }
 
 export async function getItem(slug: ShopSlug, id: string): Promise<ItemDetail> {
-  const shop = getShop(slug);
+  const shop = getShopSource(slug);
   if (!shop) throw new CatalogError("Unknown catalog");
   if (!/^\d+$/.test(id)) throw new CatalogError("Unknown item");
 
@@ -265,7 +276,7 @@ export async function getItem(slug: ShopSlug, id: string): Promise<ItemDetail> {
     .replace(/\s+/g, " ")
     .trim();
 
-  if (!title) {
+  if (!title || isHiddenAlbum(title)) {
     throw new CatalogError("Item not found");
   }
 

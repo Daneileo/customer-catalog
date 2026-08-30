@@ -1,13 +1,13 @@
 # Catalog
 
-A product catalog for reselling. It shows the same albums and photos as the supplier galleries, but **every item stays on this site**. Clicking a product opens a photo page here. There are no Yupoo (or other supplier) links on items.
+A storefront for the same albums and photos as the supplier galleries, with **no outbound product links**. Clicking an item opens a photo page on this site. Supplier gallery URLs are never shown in the UI, and images are proxied so the browser does not load those hosts.
 
-Catalogs included:
+Three catalogs are included as shop tabs:
 
-- **Taurus** — the main shop from the albums URL you sent
-- **Scorpio** and **Pisces** — the other shops listed on that same seller page
+- **Taurus** — the main gallery from the albums URL you sent
+- **Scorpio** and **Pisces** — the other two galleries listed on that seller page
 
-Images are proxied through `/api/img/...` so the browser never loads `yupoo.com` URLs. Item descriptions that contain supplier or marketplace links are stripped.
+Albums that exist only to share other gallery links (for example “NEW YUPOO”) or agent how-to posts are omitted. Item descriptions that contain marketplace or gallery URLs are stripped.
 
 ## Run locally
 
@@ -18,7 +18,7 @@ npm run dev
 
 Open [http://localhost:43141](http://localhost:43141). The home page loads the Taurus catalog.
 
-WhatsApp orders use `+852 5736 3298` from the original shop contact album.
+WhatsApp orders use `+852 5736 3298`.
 
 ## What you get
 
@@ -31,4 +31,4 @@ WhatsApp orders use `+852 5736 3298` from the original shop contact album.
 
 ## Notes
 
-This app reads public album pages at request time and caches them for a few minutes. If a supplier album is password-protected, it will not appear.
+This app reads public album pages at request time and caches them for a few minutes. Password-protected albums do not appear.

@@ -1,5 +1,5 @@
 import { NextRequest } from "next/server";
-import { getShop } from "@/lib/shops";
+import { getShopSource } from "@/lib/shop-sources";
 
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
@@ -9,7 +9,7 @@ export async function GET(
   context: { params: Promise<{ shop: string; path: string[] }> },
 ) {
   const { shop: shopSlug, path } = await context.params;
-  const shop = getShop(shopSlug);
+  const shop = getShopSource(shopSlug);
   if (!shop) {
     return new Response("Not found", { status: 404 });
   }

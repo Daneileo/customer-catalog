@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   },
   description:
     "Product catalog with photos and prices. Item pages stay on this site — no supplier links.",
+  referrer: "no-referrer",
+  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
