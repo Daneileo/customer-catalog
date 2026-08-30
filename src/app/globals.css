@@ -186,7 +186,6 @@
   width: 10px;
 }
 
-.brand-dropdown-list::-webkit-scrollbar-thumb {
-  background: color-mix(in oklch, var(--foreground) 35%, transparent);
-  border-radius: 99px;
+.brand-dropdown-panel [hidden] {
+  display: none !important;
 }
