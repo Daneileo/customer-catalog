@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown, Search } from "lucide-react";
+import { ChevronDown, Search, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { brandLetter } from "@/lib/category-nav";
 import {
@@ -21,11 +21,9 @@ export function BrandNav({
 }: {
   store: StoreSlug;
   categories: Category[];
-  activeId?: string;
 }) {
   const pathname = usePathname();
   const activeId = pathname.match(/\/c\/([^/?]+)/)?.[1];
-  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
 
   const groups = useMemo(() => {
@@ -64,32 +62,45 @@ export function BrandNav({
         All
       </Link>
 
-      <div
-        className="relative"
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-      >
-        <button
-          type="button"
+      <div className="relative">
+        <input id="brand-menu" type="checkbox" className="peer sr-only" />
+        <label
+          htmlFor="brand-menu"
           className={cn(
-            "inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm",
+            "inline-flex cursor-pointer items-center gap-1 rounded-full px-3 py-1.5 text-sm",
             activeId
               ? "bg-foreground text-background"
               : "bg-muted text-muted-foreground hover:text-foreground",
           )}
-          aria-expanded={open}
-          aria-haspopup="true"
-          onClick={() => setOpen((value) => !value)}
         >
           {active?.name || "Brands"}
           <ChevronDown className="size-3.5" />
-        </button>
+        </label>
 
-        {open ? (
-          <div className="absolute top-full left-0 z-50 w-[min(calc(100vw-2rem),42rem)] pt-1">
-            <div className="rounded-xl border bg-background p-3 shadow-lg">
-            <div className="relative mb-3">
-              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+        <div className="pointer-events-none invisible fixed inset-0 z-50 peer-checked:pointer-events-auto peer-checked:visible">
+          <label
+            htmlFor="brand-menu"
+            className="absolute inset-0 bg-black/40"
+            aria-label="Close brands"
+          />
+          <div className="absolute inset-x-0 top-0 mx-auto flex max-h-[min(92vh,44rem)] w-full max-w-7xl flex-col bg-background shadow-lg sm:top-4 sm:mx-4 sm:max-w-3xl sm:rounded-xl lg:mx-auto">
+            <div className="flex items-start justify-between gap-3 border-b p-4">
+              <div>
+                <h2 className="font-heading text-base font-medium">Brands</h2>
+                <p className="text-sm text-muted-foreground">
+                  Choose a brand to see its items.
+                </p>
+              </div>
+              <label
+                htmlFor="brand-menu"
+                className="inline-flex size-7 cursor-pointer items-center justify-center rounded-lg hover:bg-muted"
+                aria-label="Close"
+              >
+                <X className="size-4" />
+              </label>
+            </div>
+            <div className="relative border-b px-4 py-3">
+              <Search className="pointer-events-none absolute top-1/2 left-6 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
@@ -97,29 +108,28 @@ export function BrandNav({
                 className="h-9 bg-card pl-8 text-sm"
               />
             </div>
-            <div className="max-h-[min(70vh,32rem)] overflow-y-auto pr-1">
+            <div className="min-h-0 flex-1 overflow-y-auto px-2 py-3">
               {groups.length === 0 ? (
-                <p className="px-2 py-8 text-center text-sm text-muted-foreground">
+                <p className="px-3 py-8 text-center text-sm text-muted-foreground">
                   No brands match that name.
                 </p>
               ) : (
                 groups.map(([letter, brands]) => (
-                  <div key={letter} className="mb-3">
-                    <p className="sticky top-0 bg-background px-2 py-1 text-xs font-medium text-muted-foreground">
+                  <div key={letter} className="mb-2">
+                    <p className="px-3 py-1 text-xs font-medium text-muted-foreground">
                       {letter}
                     </p>
-                    <div className="grid grid-cols-2 gap-x-2 sm:grid-cols-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3">
                       {brands.map((category) => (
                         <Link
                           key={category.id}
                           href={storeCategoryPath(store, category.id)}
                           className={cn(
-                            "rounded-lg px-2 py-1.5 text-sm hover:bg-muted",
+                            "rounded-lg px-3 py-2 text-sm hover:bg-muted",
                             activeId === category.id
-                              ? "bg-muted font-medium text-foreground"
-                              : "text-foreground/90",
+                              ? "bg-muted font-medium"
+                              : "",
                           )}
-                          onClick={() => setOpen(false)}
                         >
                           {category.name}
                         </Link>
@@ -129,9 +139,8 @@ export function BrandNav({
                 ))
               )}
             </div>
-            </div>
           </div>
-        ) : null}
+        </div>
       </div>
     </div>
   );
