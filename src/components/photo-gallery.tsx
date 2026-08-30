@@ -2,9 +2,43 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import type { CatalogPhoto } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
+
+function fallbackSrc(src: string) {
+  if (src.includes("/big.")) return src.replace("/big.", "/medium.");
+  if (src.includes("/medium.")) return src.replace("/medium.", "/small.");
+  return null;
+}
+
+function GalleryImage({
+  src,
+  alt,
+  className,
+}: {
+  src: string;
+  alt: string;
+  className?: string;
+}) {
+  const [current, setCurrent] = useState(src);
+
+  useEffect(() => {
+    setCurrent(src);
+  }, [src]);
+
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={current}
+      alt={alt}
+      className={className}
+      onError={() => {
+        const next = fallbackSrc(current);
+        if (next) setCurrent(next);
+      }}
+    />
+  );
+}
 
 export function PhotoGallery({
   title,
@@ -25,6 +59,12 @@ export function PhotoGallery({
     },
     [photos.length],
   );
+
+  const enlarge = (i: number, event?: React.MouseEvent) => {
+    event?.preventDefault();
+    setIndex(i);
+    setOpen(true);
+  };
 
   useEffect(() => {
     if (!open) return;
@@ -47,86 +87,83 @@ export function PhotoGallery({
 
   return (
     <div className="space-y-3">
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
+      <a
+        href={current.largeSrc}
+        onClick={(event) => enlarge(index, event)}
         className="group relative block w-full overflow-hidden rounded-xl border bg-muted"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        <GalleryImage
           src={current.largeSrc}
           alt={title}
           className="mx-auto max-h-[70vh] w-full object-contain"
         />
-        <span className="absolute right-3 bottom-3 inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-xs text-white">
+        <span className="pointer-events-none absolute right-3 bottom-3 inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-xs text-white">
           <Expand className="size-3.5" />
           Enlarge
         </span>
-      </button>
+      </a>
       <p className="text-center text-xs text-muted-foreground">
-        Photo {index + 1} of {photos.length}. Tap the photo to enlarge.
+        Photo {index + 1} of {photos.length}. Tap any photo to enlarge.
       </p>
       {photos.length > 1 ? (
         <div className="grid grid-cols-5 gap-2 sm:grid-cols-6">
           {photos.map((photo, i) => (
-            <button
+            <a
               key={photo.thumbSrc + i}
-              type="button"
-              onClick={() => setIndex(i)}
+              href={photo.largeSrc}
+              onClick={(event) => enlarge(i, event)}
               className={cn(
                 "aspect-square overflow-hidden rounded-lg border",
                 i === index ? "border-foreground" : "border-transparent opacity-80",
               )}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+              <GalleryImage
                 src={photo.thumbSrc}
-                alt=""
+                alt={`${title} ${i + 1}`}
                 className="size-full object-cover"
               />
-            </button>
+            </a>
           ))}
         </div>
       ) : null}
 
       {open ? (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4"
+          className="fixed inset-0 z-[200] flex items-center justify-center bg-black/90 p-4"
           onClick={() => setOpen(false)}
         >
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute top-4 right-4 text-white hover:bg-white/10 hover:text-white"
+          <button
+            type="button"
+            className="absolute top-4 right-4 inline-flex size-10 items-center justify-center rounded-lg text-white hover:bg-white/10"
             onClick={() => setOpen(false)}
+            aria-label="Close"
           >
-            <X />
-            <span className="sr-only">Close</span>
-          </Button>
+            <X className="size-5" />
+          </button>
           {photos.length > 1 ? (
             <>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute left-3 text-white hover:bg-white/10 hover:text-white"
+              <button
+                type="button"
+                className="absolute left-3 inline-flex size-10 items-center justify-center rounded-lg text-white hover:bg-white/10"
+                aria-label="Previous photo"
                 onClick={(event) => {
                   event.stopPropagation();
                   go(index - 1);
                 }}
               >
-                <ChevronLeft />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="absolute right-3 text-white hover:bg-white/10 hover:text-white"
+                <ChevronLeft className="size-6" />
+              </button>
+              <button
+                type="button"
+                className="absolute right-3 inline-flex size-10 items-center justify-center rounded-lg text-white hover:bg-white/10"
+                aria-label="Next photo"
                 onClick={(event) => {
                   event.stopPropagation();
                   go(index + 1);
                 }}
               >
-                <ChevronRight />
-              </Button>
+                <ChevronRight className="size-6" />
+              </button>
             </>
           ) : null}
           {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -135,6 +172,11 @@ export function PhotoGallery({
             alt={title}
             className="max-h-[90vh] max-w-full object-contain"
             onClick={(event) => event.stopPropagation()}
+            onError={(event) => {
+              const img = event.currentTarget;
+              const next = fallbackSrc(img.src);
+              if (next) img.src = next;
+            }}
           />
         </div>
       ) : null}

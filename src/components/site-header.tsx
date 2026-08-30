@@ -113,19 +113,14 @@ export function SiteFooter({ mode = "storefront" }: { mode?: CatalogMode }) {
         ) : (
           <>
             <p>Photos for display. Message on WhatsApp to order.</p>
-            <div className="flex flex-wrap gap-x-4 gap-y-1">
-              <Link className="font-medium text-foreground hover:underline" href="/master">
-                Master copy
-              </Link>
-              <a
-                className="font-medium text-foreground hover:underline"
-                href={whatsappLink("Hi, I want to place an order.")}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                WhatsApp {WHATSAPP_DISPLAY}
-              </a>
-            </div>
+            <a
+              className="font-medium text-foreground hover:underline"
+              href={whatsappLink("Hi, I want to place an order.")}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              WhatsApp {WHATSAPP_DISPLAY}
+            </a>
           </>
         )}
       </div>
