@@ -267,14 +267,18 @@ function isBrandCategory(name: string) {
   return /^brand\b/i.test(name.replace(/[🔥\s]+/g, " ").trim());
 }
 
-function categorySortName(name: string) {
-  return name
+function categoryRank(name: string): [number, string] {
+  const cleaned = name
     .replace(/🔥/g, "")
     .replace(/[（(].*$/, "")
     .replace(/品牌分类/g, "")
     .replace(/[^a-zA-Z0-9]+/g, " ")
     .trim()
     .toLowerCase();
+  if (!cleaned || !/[a-z]/.test(cleaned)) {
+    return [1, cleaned || name.replace(/🔥/g, "").trim().toLowerCase()];
+  }
+  return [0, cleaned];
 }
 
 function displayCategoryName(name: string) {
@@ -285,12 +289,12 @@ function sortCategories(categories: CatalogCategory[]): CatalogCategory[] {
   const brands = categories.filter((category) => isBrandCategory(category.name));
   const rest = categories
     .filter((category) => !isBrandCategory(category.name))
-    .sort((a, b) =>
-      categorySortName(a.name).localeCompare(categorySortName(b.name), "en", {
-        numeric: true,
-        sensitivity: "base",
-      }),
-    );
+    .sort((a, b) => {
+      const [rankA, sortA] = categoryRank(a.name);
+      const [rankB, sortB] = categoryRank(b.name);
+      if (rankA !== rankB) return rankA - rankB;
+      return sortA.localeCompare(sortB, "en", { sensitivity: "base" });
+    });
   return [...brands, ...rest].map((category) =>
     isBrandCategory(category.name)
       ? { ...category, name: displayCategoryName(category.name) }
