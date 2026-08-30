@@ -61,6 +61,9 @@ export const SHOP_SOURCES: Record<ShopSlug, ShopSource> = {
       /how to (?:order|place)/i,
       /telegram/i,
       /wechat/i,
+      /taobao catalog guide/i,
+      /purchase through agents/i,
+      /direct mail shipping/i,
     ],
     blockedAlbumPatterns: [
       /2025\s+talent cooperation/i,

@@ -59,6 +59,7 @@ export function stripYenPrices(value: string) {
     .replace(/[￥¥]\s*~/g, " ")
     .replace(/[￥¥]\s*\d+/g, " ")
     .replace(/\d+\s*[￥¥]/g, " ")
+    .replace(/\d+\s*Y(?=[\s【[\]|$])/gi, " ")
     .replace(/[￥¥]/g, " ")
     .replace(/⬅️|←/g, " ")
     .replace(/\s+/g, " ")
