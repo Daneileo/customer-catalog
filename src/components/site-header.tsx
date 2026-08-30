@@ -40,7 +40,7 @@ export function SiteHeader({
             </p>
             <p className="truncate text-xs text-muted-foreground">
               {master
-                ? "Prices and album links for ordering. Customer catalog stays link-free."
+                ? "Local only. Prices and album links — not on the published site."
                 : "Browse items. Photos only — no supplier links."}
             </p>
           </div>
@@ -105,7 +105,7 @@ export function SiteFooter({ mode = "storefront" }: { mode?: CatalogMode }) {
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-2 px-4 py-8 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-6">
         {mode === "master" ? (
           <>
-            <p>Master copy with yuan prices and album links. Not the customer storefront.</p>
+            <p>Local master copy with yuan prices and album links. Not published.</p>
             <Link className="font-medium text-foreground hover:underline" href="/">
               Back to customer catalog
             </Link>
