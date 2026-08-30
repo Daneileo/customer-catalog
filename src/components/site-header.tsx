@@ -24,7 +24,7 @@ export function SiteHeader({
   const current = STORE_LIST.find((entry) => entry.slug === store) ?? STORE_LIST[0];
 
   return (
-    <header className="sticky top-0 z-40 overflow-visible border-b bg-background/90 backdrop-blur-md">
+    <header className="sticky top-0 z-40 border-b bg-background">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-2">
           <CategoryMenu store={store} categories={categories} />
