@@ -1,5 +1,6 @@
 import "server-only";
 
+import { unstable_cache } from "next/cache";
 import * as cheerio from "cheerio";
 import type { Element } from "domhandler";
 import {
@@ -27,6 +28,158 @@ import {
   extractSku,
   itemMatchesQuery,
 } from "@/lib/search-match";
+
+const VIEWABLE_ITEM_CONCURRENCY = 24;
+const POPULATED_CATEGORY_CONCURRENCY = 40;
+const POPULATED_CATEGORY_CACHE_MAX = 250;
+
+function isListingItemOpenable(
+  title: string,
+  shop: ShopSource,
+  options?: CatalogFetchOptions,
+) {
+  const normalized = title.replace(/\s+/g, " ").trim();
+  return (
+    Boolean(normalized) &&
+    !isHiddenAlbum(normalized) &&
+    !isBlockedListingTitle(normalized, shop, options)
+  );
+}
+
+function albumTitleFromPage($: cheerio.CheerioAPI) {
+  return (
+    $(".showalbumheader__gallerytitle").first().text() ||
+    $("h1.visually-hidden").first().text() ||
+    $("title").text().split("|")[0] ||
+    ""
+  )
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+async function albumIsViewable(
+  shop: ShopSource,
+  id: string,
+  options?: CatalogFetchOptions,
+) {
+  try {
+    const html = await fetchAlbumPage(shop, id, 1);
+    const $ = cheerio.load(html);
+    const title = albumTitleFromPage($);
+    if (!isListingItemOpenable(title, shop, options)) return false;
+    return parsePhotos($, shop).length > 0;
+  } catch {
+    return false;
+  }
+}
+
+async function filterViewableCatalogItems(
+  items: CatalogItem[],
+  options?: CatalogFetchOptions,
+) {
+  if (items.length === 0) return items;
+
+  const viewable: CatalogItem[] = [];
+  const needsCheck: CatalogItem[] = [];
+
+  for (const item of items) {
+    const shop = getShopSource(item.shop);
+    if (!shop || !isListingItemOpenable(item.title, shop, options)) continue;
+    if (item.photoCount > 0 && !/https?:\/\//i.test(item.title)) {
+      viewable.push(item);
+      continue;
+    }
+    needsCheck.push(item);
+  }
+
+  for (let i = 0; i < needsCheck.length; i += VIEWABLE_ITEM_CONCURRENCY) {
+    const batch = needsCheck.slice(i, i + VIEWABLE_ITEM_CONCURRENCY);
+    const checks = await Promise.all(
+      batch.map(async (item) => {
+        const shop = getShopSource(item.shop);
+        if (!shop) return false;
+        return albumIsViewable(shop, item.id, options);
+      }),
+    );
+    for (let j = 0; j < batch.length; j += 1) {
+      if (checks[j]) viewable.push(batch[j]);
+    }
+  }
+
+  return viewable;
+}
+
+async function categoryHasAlbums(
+  shop: ShopSource,
+  category: CatalogCategory,
+  options?: CatalogFetchOptions,
+) {
+  for (const source of category.sources) {
+    if (source.shop !== shop.slug) continue;
+    try {
+      const listing = await getCategoryPage(source.shop, source.id, 1, {
+        isSubCategory: source.isSubCategory,
+        master: options?.master,
+      });
+      if (listing.items.length > 0) return true;
+    } catch {
+      // Try the next source mapping for this category.
+    }
+  }
+  return false;
+}
+
+async function filterPopulatedCategories(
+  store: StoreSlug,
+  categories: CatalogCategory[],
+  options?: CatalogFetchOptions,
+) {
+  if (options?.master || categories.length > POPULATED_CATEGORY_CACHE_MAX) {
+    return categories;
+  }
+
+  const cacheKey = `populated-categories:${store}:${categories.length}`;
+  const populatedIds = await unstable_cache(
+    async () => {
+      const ids: string[] = [];
+      for (let i = 0; i < categories.length; i += POPULATED_CATEGORY_CONCURRENCY) {
+        const batch = categories.slice(i, i + POPULATED_CATEGORY_CONCURRENCY);
+        const checks = await Promise.all(
+          batch.map(async (category) => {
+            for (const shopSlug of STORES[store].shops) {
+              const shop = getShopSource(shopSlug);
+              if (!shop) continue;
+              if (await categoryHasAlbums(shop, category, options)) {
+                return category.id;
+              }
+            }
+            return null;
+          }),
+        );
+        ids.push(...checks.filter((id): id is string => Boolean(id)));
+      }
+      return ids;
+    },
+    [cacheKey],
+    { revalidate: 3600 },
+  )();
+
+  const allowed = new Set(populatedIds);
+  return categories.filter((category) => allowed.has(category.id));
+}
+
+async function finalizeStoreListing(
+  store: StoreSlug,
+  listing: CatalogPage,
+  options?: CatalogFetchOptions,
+) {
+  const categories = await filterPopulatedCategories(
+    store,
+    listing.categories,
+    options,
+  );
+  return { ...listing, categories };
+}
 
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
@@ -227,12 +380,7 @@ function parseAlbumElement(
   )
     .replace(/\s+/g, " ")
     .trim();
-  if (
-    !title ||
-    isHiddenAlbum(title) ||
-    isBlockedListingTitle(title, shop, options)
-  )
-    return null;
+  if (!title || !isListingItemOpenable(title, shop, options)) return null;
 
   const imgEl = node.find("img.album__img, img[data-origin-src]").first();
   const img =
@@ -472,7 +620,8 @@ export async function getStoreIndex(
   const pages = await loadStoreShops(store, (slug) =>
     getAlbumIndex(slug, page, options),
   );
-  return combineListings(pages, page, listingMode);
+  const listing = combineListings(pages, page, listingMode);
+  return finalizeStoreListing(store, listing, options);
 }
 
 export async function getStoreCategory(
@@ -504,9 +653,15 @@ export async function getStoreCategory(
   });
 
   const combined = combineListings(pages, page, categoryListingModeForStore(store));
+  const items = await filterViewableCatalogItems(combined.items, options);
+  const listing = await finalizeStoreListing(
+    store,
+    { ...combined, items },
+    options,
+  );
   return {
-    ...combined,
-    categories: index.categories,
+    ...listing,
+    categories: listing.categories,
   };
 }
 
@@ -740,7 +895,7 @@ export async function getItem(
   const parsed = parseProductTitle(title);
   const displayTitle = parsed.raw;
 
-  if (!title || isHiddenAlbum(title)) {
+  if (!title || !isListingItemOpenable(title, shop, options)) {
     throw new CatalogError("Item not found");
   }
 
@@ -755,6 +910,10 @@ export async function getItem(
   ];
   const pageCount = Math.max(1, parsePageCount($));
   const photos = parsePhotos($, shop);
+
+  if (photos.length === 0) {
+    throw new CatalogError("Item not found");
+  }
 
   if (pageCount > 1) {
     const rest = await Promise.all(
