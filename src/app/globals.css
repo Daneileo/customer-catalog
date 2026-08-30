@@ -127,4 +127,8 @@
   html {
     @apply font-sans;
   }
+  html:has(#brand-menu:checked),
+  html:has(#category-menu:checked) {
+    overflow: hidden;
+  }
 }

@@ -83,7 +83,7 @@ export function BrandNav({
             className="absolute inset-0 bg-black/40"
             aria-label="Close brands"
           />
-          <div className="absolute inset-x-0 top-0 mx-auto flex max-h-[min(92vh,44rem)] w-full max-w-7xl flex-col bg-background shadow-lg sm:top-4 sm:mx-4 sm:max-w-3xl sm:rounded-xl lg:mx-auto">
+          <div className="absolute inset-x-0 top-0 mx-auto flex h-[min(92vh,44rem)] w-full max-w-7xl flex-col overflow-hidden bg-background shadow-lg sm:top-4 sm:mx-4 sm:max-w-3xl sm:rounded-xl lg:mx-auto">
             <div className="flex items-start justify-between gap-3 border-b p-4">
               <div>
                 <h2 className="font-heading text-base font-medium">Brands</h2>
@@ -108,7 +108,7 @@ export function BrandNav({
                 className="h-9 bg-card pl-8 text-sm"
               />
             </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-2 py-3">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-2 py-3">
               {groups.length === 0 ? (
                 <p className="px-3 py-8 text-center text-sm text-muted-foreground">
                   No brands match that name.
