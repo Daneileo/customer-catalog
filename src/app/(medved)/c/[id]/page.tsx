@@ -55,7 +55,7 @@ export default async function CategoryPage({
     <CatalogListing
       store="medved"
       title={current?.name || "Category"}
-      description="Items in this category. Click through for photos on this site only."
+      description="Items from this brand. Click through for photos on this site only."
       data={data}
       pathname={storeCategoryPath("medved", id)}
       activeCategoryId={id}

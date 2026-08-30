@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
+import { brandLetter } from "@/lib/category-nav";
 import {
   storeCategoryPath,
   storeHome,
@@ -19,6 +20,9 @@ export function CategoryMenu({
   categories: Category[];
 }) {
   const pathname = usePathname();
+  const letters = [...new Set(categories.map((category) => brandLetter(category.name)))].sort(
+    (a, b) => (a === "#" ? -1 : b === "#" ? 1 : a.localeCompare(b)),
+  );
 
   return (
     <div className="relative" key={pathname}>
@@ -26,7 +30,7 @@ export function CategoryMenu({
       <label
         htmlFor="category-menu"
         className="inline-flex size-10 cursor-pointer items-center justify-center rounded-lg border border-border bg-background hover:bg-muted"
-        aria-label="Categories"
+        aria-label="Brands"
       >
         <Menu className="size-4" />
       </label>
@@ -34,7 +38,7 @@ export function CategoryMenu({
         <label
           htmlFor="category-menu"
           className="absolute inset-0 bg-black/40"
-          aria-label="Close categories"
+          aria-label="Close brands"
         />
         <aside
           className="absolute inset-y-0 left-0 flex w-[min(100%,24rem)] flex-col bg-background shadow-lg"
@@ -46,10 +50,10 @@ export function CategoryMenu({
                 id="category-drawer-title"
                 className="font-heading text-base font-medium"
               >
-                Categories
+                Brands
               </h2>
               <p className="text-sm text-muted-foreground">
-                Filter this catalog. Item pages stay on this site.
+                Open a brand to see its items. Photos stay on this site.
               </p>
             </div>
             <label
@@ -69,17 +73,26 @@ export function CategoryMenu({
             </Link>
             {categories.length === 0 ? (
               <p className="px-3 py-6 text-sm text-muted-foreground">
-                Categories will appear when the catalog loads.
+                Brands will appear when the catalog loads.
               </p>
             ) : (
-              categories.map((category) => (
-                <Link
-                  key={category.id}
-                  href={storeCategoryPath(store, category.id)}
-                  className="block rounded-lg px-3 py-2 text-sm hover:bg-muted"
-                >
-                  {category.name}
-                </Link>
+              letters.map((letter) => (
+                <div key={letter} className="mt-2">
+                  <p className="px-3 py-1 text-xs font-medium text-muted-foreground">
+                    {letter}
+                  </p>
+                  {categories
+                    .filter((category) => brandLetter(category.name) === letter)
+                    .map((category) => (
+                      <Link
+                        key={category.id}
+                        href={storeCategoryPath(store, category.id)}
+                        className="block rounded-lg px-3 py-2 text-sm hover:bg-muted"
+                      >
+                        {category.name}
+                      </Link>
+                    ))}
+                </div>
               ))
             )}
           </div>

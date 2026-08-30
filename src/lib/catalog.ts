@@ -9,6 +9,7 @@ import {
 } from "@/lib/shops";
 import { parseProductTitle, sanitizeCopy } from "@/lib/titles";
 import { restoreBrands } from "@/lib/brands";
+import { isBrandListing, sortBrandList } from "@/lib/category-nav";
 
 const USER_AGENT =
   "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36";
@@ -133,7 +134,7 @@ function parseCategories($: cheerio.CheerioAPI) {
     const id = href.match(/\/categories\/(\d+)/)?.[1];
     if (!id || id === "0") return;
     const name = restoreBrands($(el).text().replace(/\s+/g, " ").trim());
-    if (!name || isHiddenCategory(name)) return;
+    if (!name || isHiddenCategory(name) || !isBrandListing(name)) return;
     categories.set(id, name);
   });
 
@@ -263,43 +264,8 @@ export function categoryKey(name: string) {
   return key.slice(0, 80) || "category";
 }
 
-function isBrandCategory(name: string) {
-  return /^brand\b/i.test(name.replace(/[🔥\s]+/g, " ").trim());
-}
-
-function categoryRank(name: string): [number, string] {
-  const cleaned = name
-    .replace(/🔥/g, "")
-    .replace(/[（(].*$/, "")
-    .replace(/品牌分类/g, "")
-    .replace(/[^a-zA-Z0-9]+/g, " ")
-    .trim()
-    .toLowerCase();
-  if (!cleaned || !/[a-z]/.test(cleaned)) {
-    return [1, cleaned || name.replace(/🔥/g, "").trim().toLowerCase()];
-  }
-  return [0, cleaned];
-}
-
-function displayCategoryName(name: string) {
-  return isBrandCategory(name) ? "Brand" : name;
-}
-
 function sortCategories(categories: CatalogCategory[]): CatalogCategory[] {
-  const brands = categories.filter((category) => isBrandCategory(category.name));
-  const rest = categories
-    .filter((category) => !isBrandCategory(category.name))
-    .sort((a, b) => {
-      const [rankA, sortA] = categoryRank(a.name);
-      const [rankB, sortB] = categoryRank(b.name);
-      if (rankA !== rankB) return rankA - rankB;
-      return sortA.localeCompare(sortB, "en", { sensitivity: "base" });
-    });
-  return [...brands, ...rest].map((category) =>
-    isBrandCategory(category.name)
-      ? { ...category, name: displayCategoryName(category.name) }
-      : category,
-  );
+  return sortBrandList(categories.filter((category) => isBrandListing(category.name)));
 }
 
 function mergeCategories(pages: CatalogPage[]): CatalogCategory[] {

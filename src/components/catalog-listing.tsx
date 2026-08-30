@@ -1,17 +1,14 @@
-import { CategoryChips } from "@/components/category-chips";
 import { PaginationBar } from "@/components/pagination-bar";
 import { ProductGrid } from "@/components/product-grid";
 import type { CatalogPage } from "@/lib/catalog";
 import type { StoreSlug } from "@/lib/shops";
 
 export function CatalogListing({
-  store,
   title,
   description,
   data,
   pathname,
   query,
-  activeCategoryId,
 }: {
   store: StoreSlug;
   title: string;
@@ -29,11 +26,6 @@ export function CatalogListing({
         </h1>
         <p className="text-sm text-muted-foreground">{description}</p>
       </div>
-      <CategoryChips
-        store={store}
-        categories={data.categories}
-        activeId={activeCategoryId}
-      />
       <ProductGrid items={data.items} />
       <PaginationBar
         pathname={pathname}

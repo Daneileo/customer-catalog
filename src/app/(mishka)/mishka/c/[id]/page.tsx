@@ -55,7 +55,7 @@ export default async function MishkaCategoryPage({
     <CatalogListing
       store="mishka"
       title={current?.name || "Category"}
-      description="Items in this category. Click through for photos on this site only."
+      description="Items from this brand. Click through for photos on this site only."
       data={data}
       pathname={storeCategoryPath("mishka", id)}
       activeCategoryId={id}

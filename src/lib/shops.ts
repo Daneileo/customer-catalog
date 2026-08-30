@@ -45,14 +45,14 @@ export const STORES: Record<StoreSlug, Store> = {
     slug: "medved",
     name: "Medved",
     blurb:
-      "Combined catalog. Open any item for photos — nothing links away from this site.",
+      "All items, or pick a brand. Open any item for photos — nothing links away from this site.",
     shops: ["taurus", "scorpio", "pisces"],
   },
   mishka: {
     slug: "mishka",
     name: "Mishka",
     blurb:
-      "Mishka catalog. Open any item for photos — nothing links away from this site.",
+      "All items, or pick a brand. Open any item for photos — nothing links away from this site.",
     shops: ["husky"],
   },
 };

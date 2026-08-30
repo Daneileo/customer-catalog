@@ -7,7 +7,9 @@ Two catalogs:
 - **Medved** — combined Taurus, Scorpio, and Pisces galleries
 - **Mishka** — the Mishka gallery
 
-Switch catalogs with the tabs at the top. Albums that exist only to share other gallery links or agent how-to posts are omitted. Item descriptions that contain marketplace or gallery URLs are stripped. Yuan / yen prices are not shown. Brand names that were written with star or fire emoji censors are restored.
+**All** shows every item. Hover or tap **Brands** for the full brand list (decoded names). Opening a brand shows that brand’s items, same as the original galleries.
+
+Albums that exist only to share other gallery links or agent how-to posts are omitted. Item descriptions that contain marketplace or gallery URLs are stripped. Yuan / yen prices are not shown.
 
 ## Run locally
 
@@ -19,15 +21,3 @@ npm run dev
 Open [http://localhost:43141](http://localhost:43141).
 
 WhatsApp orders use `+1 (416) 245-9504`.
-
-## What you get
-
-- Medved and Mishka as separate catalogs
-- Category chips plus a category drawer, with Brand first and the rest A–Z
-- Search within the selected catalog
-- Item pages with a photo gallery / lightbox
-- Loading, empty, and error states
-
-## Notes
-
-This app reads public album pages at request time and caches them for a few minutes. Password-protected albums do not appear.
