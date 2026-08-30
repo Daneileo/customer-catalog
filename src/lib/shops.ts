@@ -2,7 +2,7 @@ export const WHATSAPP_NUMBER = "14162459504";
 export const WHATSAPP_DISPLAY = "+1 (416) 245-9504";
 
 export type ShopSlug = "taurus" | "scorpio" | "pisces" | "husky";
-export type StoreSlug = "sirius" | "husky";
+export type StoreSlug = "medved" | "mishka";
 
 export type Shop = {
   slug: ShopSlug;
@@ -28,8 +28,8 @@ export const SHOPS: Record<ShopSlug, Shop> = {
   },
   husky: {
     slug: "husky",
-    name: "Husky",
-    blurb: "Husky catalog",
+    name: "Mishka",
+    blurb: "Mishka catalog",
   },
 };
 
@@ -41,18 +41,18 @@ export type Store = {
 };
 
 export const STORES: Record<StoreSlug, Store> = {
-  sirius: {
-    slug: "sirius",
-    name: "Sirius",
+  medved: {
+    slug: "medved",
+    name: "Medved",
     blurb:
       "Combined catalog. Open any item for photos — nothing links away from this site.",
     shops: ["taurus", "scorpio", "pisces"],
   },
-  husky: {
-    slug: "husky",
-    name: "Husky",
+  mishka: {
+    slug: "mishka",
+    name: "Mishka",
     blurb:
-      "Husky catalog. Open any item for photos — nothing links away from this site.",
+      "Mishka catalog. Open any item for photos — nothing links away from this site.",
     shops: ["husky"],
   },
 };
@@ -76,15 +76,15 @@ export function getStore(slug: string): Store | null {
 }
 
 export function storeForShop(shop: ShopSlug): StoreSlug {
-  return shop === "husky" ? "husky" : "sirius";
+  return shop === "husky" ? "mishka" : "medved";
 }
 
 export function storeBasePath(store: StoreSlug) {
-  return store === "sirius" ? "" : `/${store}`;
+  return store === "medved" ? "" : `/${store}`;
 }
 
 export function storeHome(store: StoreSlug) {
-  return store === "sirius" ? "/" : `/${store}`;
+  return store === "medved" ? "/" : `/${store}`;
 }
 
 export function storeSearchPath(store: StoreSlug) {

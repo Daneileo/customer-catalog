@@ -20,6 +20,36 @@ const nextConfig: NextConfig = {
         permanent: false,
       },
       {
+        source: "/medved",
+        destination: "/",
+        permanent: false,
+      },
+      {
+        source: "/medved/search",
+        destination: "/search",
+        permanent: false,
+      },
+      {
+        source: "/medved/c/:id",
+        destination: "/c/:id",
+        permanent: false,
+      },
+      {
+        source: "/husky",
+        destination: "/mishka",
+        permanent: false,
+      },
+      {
+        source: "/husky/search",
+        destination: "/mishka/search",
+        permanent: false,
+      },
+      {
+        source: "/husky/c/:id",
+        destination: "/mishka/c/:id",
+        permanent: false,
+      },
+      {
         source: "/:shop(taurus|scorpio|pisces)",
         destination: "/",
         permanent: false,

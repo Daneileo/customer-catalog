@@ -263,6 +263,41 @@ export function categoryKey(name: string) {
   return key.slice(0, 80) || "category";
 }
 
+function isBrandCategory(name: string) {
+  return /^brand\b/i.test(name.replace(/[🔥\s]+/g, " ").trim());
+}
+
+function categorySortName(name: string) {
+  return name
+    .replace(/🔥/g, "")
+    .replace(/[（(].*$/, "")
+    .replace(/品牌分类/g, "")
+    .replace(/[^a-zA-Z0-9]+/g, " ")
+    .trim()
+    .toLowerCase();
+}
+
+function displayCategoryName(name: string) {
+  return isBrandCategory(name) ? "Brand" : name;
+}
+
+function sortCategories(categories: CatalogCategory[]): CatalogCategory[] {
+  const brands = categories.filter((category) => isBrandCategory(category.name));
+  const rest = categories
+    .filter((category) => !isBrandCategory(category.name))
+    .sort((a, b) =>
+      categorySortName(a.name).localeCompare(categorySortName(b.name), "en", {
+        numeric: true,
+        sensitivity: "base",
+      }),
+    );
+  return [...brands, ...rest].map((category) =>
+    isBrandCategory(category.name)
+      ? { ...category, name: displayCategoryName(category.name) }
+      : category,
+  );
+}
+
 function mergeCategories(pages: CatalogPage[]): CatalogCategory[] {
   const map = new Map<string, CatalogCategory>();
   for (const page of pages) {
@@ -288,7 +323,7 @@ function mergeCategories(pages: CatalogPage[]): CatalogCategory[] {
       }
     }
   }
-  return [...map.values()];
+  return sortCategories([...map.values()]);
 }
 
 function combineListings(pages: CatalogPage[], page: number): CatalogPage {
@@ -390,15 +425,15 @@ export async function searchStore(store: StoreSlug, query: string, page = 1) {
 }
 
 export async function getCombinedIndex(page = 1) {
-  return getStoreIndex("sirius", page);
+  return getStoreIndex("medved", page);
 }
 
 export async function getCombinedCategory(slug: string, page = 1) {
-  return getStoreCategory("sirius", slug, page);
+  return getStoreCategory("medved", slug, page);
 }
 
 export async function searchCombined(query: string, page = 1) {
-  return searchStore("sirius", query, page);
+  return searchStore("medved", query, page);
 }
 
 function parsePhotos($: cheerio.CheerioAPI, shop: ShopSource): CatalogPhoto[] {

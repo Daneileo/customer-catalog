@@ -16,7 +16,7 @@ export async function generateMetadata({
 }) {
   const { id } = await params;
   try {
-    const data = await getStoreCategory("husky", id, 1);
+    const data = await getStoreCategory("medved", id, 1);
     const current = data.categories.find((category) => category.id === id);
     return { title: current?.name || "Category" };
   } catch {
@@ -24,7 +24,7 @@ export async function generateMetadata({
   }
 }
 
-export default async function HuskyCategoryPage({
+export default async function CategoryPage({
   params,
   searchParams,
 }: {
@@ -37,7 +37,7 @@ export default async function HuskyCategoryPage({
   let data: CatalogPage | null = null;
   let message: string | null = null;
   try {
-    data = await getStoreCategory("husky", id, page);
+    data = await getStoreCategory("medved", id, page);
   } catch (error) {
     message =
       error instanceof FeedError
@@ -46,18 +46,18 @@ export default async function HuskyCategoryPage({
   }
 
   if (!data) {
-    return <CatalogError message={message ?? undefined} href={storeHome("husky")} />;
+    return <CatalogError message={message ?? undefined} href={storeHome("medved")} />;
   }
 
   const current = data.categories.find((category) => category.id === id);
 
   return (
     <CatalogListing
-      store="husky"
+      store="medved"
       title={current?.name || "Category"}
       description="Items in this category. Click through for photos on this site only."
       data={data}
-      pathname={storeCategoryPath("husky", id)}
+      pathname={storeCategoryPath("medved", id)}
       activeCategoryId={id}
     />
   );

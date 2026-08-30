@@ -8,7 +8,7 @@ import {
 } from "@/lib/catalog";
 import { STORES, storeHome, storeSearchPath } from "@/lib/shops";
 
-const STORE = STORES.sirius;
+const STORE = STORES.medved;
 
 export const revalidate = 120;
 
@@ -30,13 +30,13 @@ export default async function SearchPage({
   const page = Math.max(1, Number((await searchParams).page) || 1);
 
   if (!query) {
-    redirect(storeHome("sirius"));
+    redirect(storeHome("medved"));
   }
 
   let data: CatalogPage | null = null;
   let message: string | null = null;
   try {
-    data = await searchStore("sirius", query, page);
+    data = await searchStore("medved", query, page);
   } catch (error) {
     message =
       error instanceof FeedError
@@ -45,16 +45,16 @@ export default async function SearchPage({
   }
 
   if (!data) {
-    return <CatalogError message={message ?? undefined} href={storeHome("sirius")} />;
+    return <CatalogError message={message ?? undefined} href={storeHome("medved")} />;
   }
 
   return (
     <CatalogListing
-      store="sirius"
+      store="medved"
       title="Search"
       description={`Results for “${query}” in ${STORE.name}.`}
       data={data}
-      pathname={storeSearchPath("sirius")}
+      pathname={storeSearchPath("medved")}
       query={{ q: query }}
     />
   );

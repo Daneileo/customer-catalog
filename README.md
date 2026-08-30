@@ -4,8 +4,8 @@ A storefront for the same albums and photos as the supplier galleries, with **no
 
 Two catalogs:
 
-- **Sirius** — combined Taurus, Scorpio, and Pisces galleries
-- **Husky** — the Husky gallery
+- **Medved** — combined Taurus, Scorpio, and Pisces galleries
+- **Mishka** — the Mishka gallery
 
 Switch catalogs with the tabs at the top. Albums that exist only to share other gallery links or agent how-to posts are omitted. Item descriptions that contain marketplace or gallery URLs are stripped. Yuan / yen prices are not shown. Brand names that were written with star or fire emoji censors are restored.
 
@@ -22,8 +22,8 @@ WhatsApp orders use `+1 (416) 245-9504`.
 
 ## What you get
 
-- Sirius and Husky as separate catalogs
-- Category chips plus a category drawer
+- Medved and Mishka as separate catalogs
+- Category chips plus a category drawer, with Brand first and the rest A–Z
 - Search within the selected catalog
 - Item pages with a photo gallery / lightbox
 - Loading, empty, and error states
