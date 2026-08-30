@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Expand, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { CatalogPhoto } from "@/lib/catalog";
 import { cn } from "@/lib/utils";
@@ -50,7 +50,7 @@ export function PhotoGallery({
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="block w-full overflow-hidden rounded-xl border bg-muted"
+        className="group relative block w-full overflow-hidden rounded-xl border bg-muted"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
@@ -58,9 +58,13 @@ export function PhotoGallery({
           alt={title}
           className="mx-auto max-h-[70vh] w-full object-contain"
         />
+        <span className="absolute right-3 bottom-3 inline-flex items-center gap-1 rounded-full bg-black/70 px-2.5 py-1 text-xs text-white">
+          <Expand className="size-3.5" />
+          Enlarge
+        </span>
       </button>
       <p className="text-center text-xs text-muted-foreground">
-        Photo {index + 1} of {photos.length}. Tap to enlarge.
+        Photo {index + 1} of {photos.length}. Tap the photo to enlarge.
       </p>
       {photos.length > 1 ? (
         <div className="grid grid-cols-5 gap-2 sm:grid-cols-6">

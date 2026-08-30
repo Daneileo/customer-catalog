@@ -12,7 +12,6 @@ import {
   SheetDescription,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet";
 import { SHOP_LIST, WHATSAPP_DISPLAY, whatsappLink, type ShopSlug } from "@/lib/shops";
 import { cn } from "@/lib/utils";
@@ -112,6 +111,7 @@ function CategorySheet({
   shop: ShopSlug;
   categories: Category[];
 }) {
+  const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -120,13 +120,18 @@ function CategorySheet({
   }, [categories, query]);
 
   return (
-    <Sheet>
-      <SheetTrigger
-        render={<Button variant="outline" size="icon" className="size-10" />}
+    <Sheet open={open} onOpenChange={setOpen}>
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        className="size-10"
+        aria-expanded={open}
+        aria-label="Categories"
+        onClick={() => setOpen(true)}
       >
         <Menu />
-        <span className="sr-only">Categories</span>
-      </SheetTrigger>
+      </Button>
       <SheetContent side="left" className="w-[min(100%,24rem)] p-0">
         <SheetHeader className="border-b">
           <SheetTitle>Categories</SheetTitle>
@@ -147,6 +152,7 @@ function CategorySheet({
           <Link
             href={`/${shop}`}
             className="block rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted"
+            onClick={() => setOpen(false)}
           >
             All items
           </Link>
@@ -160,6 +166,7 @@ function CategorySheet({
                 key={category.id}
                 href={`/${shop}/c/${category.id}`}
                 className="block rounded-lg px-3 py-2 text-sm hover:bg-muted"
+                onClick={() => setOpen(false)}
               >
                 {category.name}
               </Link>
