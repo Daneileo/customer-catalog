@@ -365,10 +365,28 @@ export async function getStoreCategory(
 export async function searchStore(store: StoreSlug, query: string, page = 1) {
   const q = query.trim();
   if (!q) return getStoreIndex(store, page);
+
+  const index = await getStoreIndex(store, 1);
+  const folded = q.toLowerCase().replace(/['’]/g, "").replace(/\s+/g, " ");
+  const category = index.categories.find((entry) => {
+    const name = entry.name.toLowerCase().replace(/['’]/g, "").replace(/\s+/g, " ");
+    return name === folded;
+  });
+
   const pages = await loadStoreShops(store, (slug) =>
     searchCatalog(slug, q, page),
   );
-  return combineListings(pages, page);
+  const combined = combineListings(pages, page);
+  const hasHits = combined.items.length > 0;
+  if (!hasHits && category) {
+    const listing = await getStoreCategory(store, category.id, page);
+    return { ...listing, categories: index.categories };
+  }
+
+  return {
+    ...combined,
+    categories: index.categories,
+  };
 }
 
 export async function getCombinedIndex(page = 1) {

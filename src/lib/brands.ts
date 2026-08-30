@@ -287,6 +287,8 @@ export const BRANDS = [
   "WILD THINGS",
   "X-BIONIC",
   "YAMATOMICHI",
+  "HARRIS",
+  "HANES",
   "ZEGNA",
   "Y-3",
 ] as const;
@@ -318,6 +320,7 @@ const EXACT: Record<string, string> = {
   "Y⭐": "Y-3",
   "L⭐": "LV",
   "ST⭐⭐E": "STONE ISLAND",
+  "F⭐⭐⭐⭐": "FENDI",
   "TH⭐T'S A AW⭐UL L⭐T OF C..": "THAT'S A AWFUL LOT OF COCKS",
   "TH⭐T'S A AW⭐UL L⭐T OF C.": "THAT'S A AWFUL LOT OF COCKS",
 };
@@ -339,11 +342,22 @@ const FIXED: { pattern: RegExp; brand: string }[] = [
     brand: "JACK WOLFSKIN",
   },
   { pattern: new RegExp(`${EDGE}Z🔥🔥G🔥A${END}`, "gi"), brand: "ZEGNA" },
+  { pattern: new RegExp(`${EDGE}🔥NK${END}`, "gi"), brand: "NIKE" },
   {
     pattern: /TH🔥T['’]S A AW🔥UL L🔥T OF C\.{0,2}/gi,
     brand: "THAT'S A AWFUL LOT OF COCKS",
   },
 ];
+
+const PRODUCT_TAIL =
+  /T-SHIRTS?|TEES?|CAPS?|HATS?|HEADGEAR|GLOVES?|HOODIES?|SWEATERS?|JACKETS?|SHORTS?|PANTS|TROUSERS|SLIPPERS?|SHIRTS?|COATS?|VESTS?|COTTON|DOWN|SUITS?|ACCESSORY/i;
+
+function splitGluedProducts(text: string) {
+  return text.replace(
+    new RegExp(`(${CENSOR})(${PRODUCT_TAIL.source})`, "gi"),
+    "$1 $2",
+  );
+}
 
 function hasCensor(value: string) {
   return /⭐️|⭐|★|☆|✦|🔥️|🔥/.test(value);
@@ -409,10 +423,20 @@ function exactKey(value: string) {
     .toUpperCase();
 }
 
+function enoughEvidence(match: string, brand: string) {
+  const confirmed = confirmingLetters(match, brand);
+  const brandLen = [...brand.toUpperCase()].filter((char) =>
+    /[A-Z0-9]/.test(char),
+  ).length;
+  if (confirmed < 1) return false;
+  if (brandLen <= 3) return true;
+  return confirmed >= 2;
+}
+
 export function restoreBrands(text: string) {
-  let result = text
-    .replace(/&amp;/gi, "&")
-    .replace(/[✖✕×]/g, "X");
+  let result = splitGluedProducts(
+    text.replace(/&amp;/gi, "&").replace(/[✖✕×]/g, "X"),
+  );
   if (!hasCensor(result)) return result;
 
   const key = exactKey(result);
@@ -425,7 +449,7 @@ export function restoreBrands(text: string) {
   for (const { brand, pattern } of REPLACERS) {
     result = result.replace(pattern, (match) => {
       if (!hasCensor(match)) return match;
-      if (confirmingLetters(match, brand) < 1) return match;
+      if (!enoughEvidence(match, brand)) return match;
       return brand;
     });
   }
