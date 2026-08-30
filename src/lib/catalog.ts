@@ -52,7 +52,7 @@ export type CatalogPhoto = {
 export type CatalogCategory = {
   id: string;
   name: string;
-  sources: { shop: ShopSlug; id: string }[];
+  sources: { shop: ShopSlug; id: string; isSubCategory?: boolean }[];
 };
 
 export type CatalogPage = {
@@ -149,11 +149,14 @@ function parsePageCount($: cheerio.CheerioAPI) {
 }
 
 function parseCategories($: cheerio.CheerioAPI, shop: ShopSource) {
-  const categories = new Map<string, string>();
+  const categories = new Map<
+    string,
+    { name: string; isSubCategory: boolean }
+  >();
   const listingMode = categoryListingModeForShop(shop.slug);
 
   $(
-    ".showheader__categoryList a[href^='/categories/'], .showheader__category_new a.showheader__link[href^='/categories/'], .showheader__category_item a[href^='/categories/']",
+    ".showheader__categoryList a[href^='/categories/'], .showheader__category_new a.showheader__link[href^='/categories/'], .showheader__category_item a[href^='/categories/'], .showheader__child_link[href^='/categories/'], .showheader__category_child_item a[href^='/categories/']",
   ).each((_, el) => {
     const href = $(el).attr("href") || "";
     const id = href.match(/\/categories\/(\d+)/)?.[1];
@@ -163,13 +166,20 @@ function parseCategories($: cheerio.CheerioAPI, shop: ShopSource) {
       return;
     }
     if (listingMode === "brands" && !isBrandListing(name)) return;
-    categories.set(id, name);
+    const isSubCategory = /[?&]isSubCate=true/i.test(href);
+    const existing = categories.get(id);
+    if (!existing) {
+      categories.set(id, { name, isSubCategory });
+      return;
+    }
+    if (isSubCategory) existing.isSubCategory = true;
   });
 
-  return [...categories.entries()].map(([id, name]) => ({
+  return [...categories.entries()].map(([id, entry]) => ({
     id,
-    name,
-    sources: [] as { shop: ShopSlug; id: string }[],
+    name: entry.name,
+    isSubCategory: entry.isSubCategory,
+    sources: [] as { shop: ShopSlug; id: string; isSubCategory?: boolean }[],
   }));
 }
 
@@ -250,11 +260,12 @@ function listingUrl(
   shop: ShopSource,
   kind: "albums" | "category" | "search",
   page: number,
-  extra?: { categoryId?: string; query?: string },
+  extra?: { categoryId?: string; query?: string; isSubCategory?: boolean },
 ) {
   const url = new URL(`https://${shop.host}/albums`);
   if (kind === "category" && extra?.categoryId) {
     url.pathname = `/categories/${extra.categoryId}`;
+    if (extra.isSubCategory) url.searchParams.set("isSubCate", "true");
   }
   if (kind === "search") {
     url.pathname = "/search/album";
@@ -268,7 +279,7 @@ async function loadListing(
   shop: ShopSource,
   kind: "albums" | "category" | "search",
   page: number,
-  extra?: { categoryId?: string; query?: string },
+  extra?: { categoryId?: string; query?: string; isSubCategory?: boolean },
 ): Promise<CatalogPage> {
   const html = await fetchHtml(listingUrl(shop, kind, page, extra));
   const $ = cheerio.load(html);
@@ -277,8 +288,15 @@ async function loadListing(
     page,
     pageCount: Math.max(1, parsePageCount($)),
     categories: parseCategories($, shop).map((category) => ({
-      ...category,
-      sources: [{ shop: shop.slug, id: category.id }],
+      id: category.id,
+      name: category.name,
+      sources: [
+        {
+          shop: shop.slug,
+          id: category.id,
+          isSubCategory: category.isSubCategory,
+        },
+      ],
     })),
   };
 }
@@ -293,11 +311,15 @@ export async function getCategoryPage(
   slug: ShopSlug,
   categoryId: string,
   page = 1,
+  options?: { isSubCategory?: boolean },
 ) {
   const shop = getShopSource(slug);
   if (!shop) throw new CatalogError("Unknown catalog");
   if (!/^\d+$/.test(categoryId)) throw new CatalogError("Unknown category");
-  return loadListing(shop, "category", page, { categoryId });
+  return loadListing(shop, "category", page, {
+    categoryId,
+    isSubCategory: options?.isSubCategory,
+  });
 }
 
 export async function searchCatalog(slug: ShopSlug, query: string, page = 1) {
@@ -337,7 +359,8 @@ function mergeCategories(
   const map = new Map<string, CatalogCategory>();
   for (const page of pages) {
     for (const category of page.categories) {
-      const id = categoryKey(category.name);
+      const id =
+        listingMode === "all" ? category.sources[0]?.id ?? category.id : categoryKey(category.name);
       const current = map.get(id);
       if (!current) {
         map.set(id, {
@@ -426,7 +449,9 @@ export async function getStoreCategory(
         categories: index.categories,
       };
     }
-    const listing = await getCategoryPage(shopSlug, source.id, page);
+    const listing = await getCategoryPage(shopSlug, source.id, page, {
+      isSubCategory: source.isSubCategory,
+    });
     return listing;
   });
 
