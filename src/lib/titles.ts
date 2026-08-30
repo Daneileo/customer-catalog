@@ -22,15 +22,16 @@ function decodeEntities(value: string) {
 }
 
 export function parseProductTitle(raw: string): ParsedTitle {
-  const title = restoreBrands(decodeEntities(raw).replace(/\s+/g, " ").trim());
+  const restored = restoreBrands(decodeEntities(raw).replace(/\s+/g, " ").trim());
+  const sale = restored.match(/[￥¥]\s*(\d+)\s*←\s*(\d+)/);
+  const prices = [...restored.matchAll(/[￥¥]\s*(\d+)/g)].map((m) => Number(m[1]));
+  const title = stripYenPrices(restored);
   const noteMatch = title.match(/[（(]([^）)]+)[）)]\s*$/);
   const note = noteMatch?.[1]?.trim();
   const withoutNote = note
     ? title.slice(0, title.lastIndexOf(noteMatch![0])).trim()
     : title;
 
-  const sale = title.match(/[￥¥]\s*(\d+)\s*←\s*(\d+)/);
-  const prices = [...title.matchAll(/[￥¥]\s*(\d+)/g)].map((m) => Number(m[1]));
   const skuMatch = withoutNote.match(/(\d{5,})\s*$/);
 
   return {
@@ -42,6 +43,15 @@ export function parseProductTitle(raw: string): ParsedTitle {
     sku: skuMatch?.[1],
     note,
   };
+}
+
+export function stripYenPrices(value: string) {
+  return value
+    .replace(/[￥¥]\s*\d+\s*←\s*\d+/g, " ")
+    .replace(/[￥¥]\s*\d+/g, " ")
+    .replace(/\bTOP\b/gi, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 export function formatYuan(amount: number) {

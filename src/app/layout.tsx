@@ -18,7 +18,7 @@ export const metadata: Metadata = {
     template: "%s · Catalog",
   },
   description:
-    "Product catalog with photos and prices. Item pages stay on this site — no supplier links.",
+    "Product catalog with photos. Item pages stay on this site — no supplier links.",
   referrer: "no-referrer",
   robots: { index: false, follow: false },
 };

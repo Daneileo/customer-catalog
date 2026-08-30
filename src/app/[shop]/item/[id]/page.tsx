@@ -10,7 +10,7 @@ import {
   type ItemDetail,
 } from "@/lib/catalog";
 import { getShop, WHATSAPP_DISPLAY, whatsappLink } from "@/lib/shops";
-import { formatYuan, parseProductTitle } from "@/lib/titles";
+import { parseProductTitle } from "@/lib/titles";
 
 export const revalidate = 300;
 
@@ -78,19 +78,6 @@ export default async function ItemPage({
 
         <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
           <div className="space-y-3">
-            {parsed.salePrice ? (
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-semibold tracking-tight">
-                  {formatYuan(parsed.salePrice)}
-                </span>
-                {parsed.originalPrice &&
-                parsed.originalPrice > parsed.salePrice ? (
-                  <span className="text-muted-foreground line-through">
-                    {formatYuan(parsed.originalPrice)}
-                  </span>
-                ) : null}
-              </div>
-            ) : null}
             <h1 className="font-heading text-xl font-semibold leading-snug">
               {item.title}
             </h1>

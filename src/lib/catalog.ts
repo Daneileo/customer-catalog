@@ -279,7 +279,7 @@ export async function getItem(slug: ShopSlug, id: string): Promise<ItemDetail> {
   )
     .replace(/\s+/g, " ")
     .trim();
-  const displayTitle = restoreBrands(title);
+  const displayTitle = parseProductTitle(title).raw;
 
   if (!title || isHiddenAlbum(title)) {
     throw new CatalogError("Item not found");

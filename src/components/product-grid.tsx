@@ -1,6 +1,5 @@
 import Link from "next/link";
 import type { CatalogItem } from "@/lib/catalog";
-import { formatYuan } from "@/lib/titles";
 
 export function ProductCard({ item }: { item: CatalogItem }) {
   return (
@@ -23,16 +22,6 @@ export function ProductCard({ item }: { item: CatalogItem }) {
         ) : null}
       </div>
       <div className="space-y-1.5 p-3">
-        {item.price ? (
-          <div className="flex items-baseline gap-2">
-            <span className="text-sm font-semibold">{formatYuan(item.price)}</span>
-            {item.originalPrice && item.originalPrice > item.price ? (
-              <span className="text-xs text-muted-foreground line-through">
-                {formatYuan(item.originalPrice)}
-              </span>
-            ) : null}
-          </div>
-        ) : null}
         <h2 className="line-clamp-2 text-sm leading-snug text-foreground/90">
           {item.title}
         </h2>

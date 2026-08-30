@@ -22,7 +22,7 @@ WhatsApp orders use `+1 (416) 245-9504`.
 
 ## What you get
 
-- Grid of items with prices parsed from titles when present
+- Grid of items with photos and restored brand names
 - Category chips plus a searchable category drawer
 - Search across the selected catalog
 - Item pages with a photo gallery / lightbox
