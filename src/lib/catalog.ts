@@ -51,11 +51,11 @@ export class CatalogError extends Error {
 }
 
 const SKIP_ALBUM =
-  /^(?:new yupoo|discord|whatsapp\b|how to use\b)/i;
+  /^(?:discord|whatsapp\b|how to use\b)/i;
 
 export function isHiddenAlbum(title: string) {
   const normalized = title.replace(/[🔥\s]+/g, " ").trim();
-  return SKIP_ALBUM.test(normalized);
+  return SKIP_ALBUM.test(normalized) || /yupoo/i.test(normalized);
 }
 
 function proxySrc(shop: ShopSource, url: string | undefined | null) {
@@ -111,7 +111,7 @@ function parsePageCount($: cheerio.CheerioAPI) {
 function parseCategories($: cheerio.CheerioAPI) {
   const categories = new Map<string, string>();
 
-  $('a[href^="/categories/"]').each((_, el) => {
+  $(".showheader__categoryList a[href^='/categories/']").each((_, el) => {
     const href = $(el).attr("href") || "";
     const id = href.match(/\/categories\/(\d+)/)?.[1];
     if (!id || id === "0") return;
@@ -140,9 +140,12 @@ function parseItems($: cheerio.CheerioAPI, shop: ShopSource): CatalogItem[] {
       .trim();
     if (!title || isHiddenAlbum(title)) return;
 
+    const imgEl = $(el).find("img.album__img");
     const img =
-      $(el).find("img.album__img").attr("src") ||
+      imgEl.attr("src") ||
+      imgEl.attr("data-src") ||
       $(el).find("img").attr("src") ||
+      $(el).find("img").attr("data-src") ||
       "";
     const coverSrc = proxySrc(shop, img);
     if (!coverSrc) return;
