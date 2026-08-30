@@ -153,9 +153,8 @@
   inset: unset;
   top: 8rem;
   left: 0.75rem;
-  right: 0.75rem;
   z-index: 9999;
-  margin: 0 auto;
+  margin: 0;
   width: min(36rem, calc(100vw - 1.5rem));
   max-height: min(70dvh, 32rem);
   flex-direction: column;
@@ -176,10 +175,18 @@
 .brand-dropdown-list {
   min-height: 0;
   flex: 1 1 auto;
-  overflow-y: auto;
+  overflow-y: scroll;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
   padding: 0.5rem;
-  scrollbar-gutter: stable;
   touch-action: pan-y;
+}
+
+.brand-dropdown-list::-webkit-scrollbar {
+  width: 10px;
+}
+
+.brand-dropdown-list::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--foreground) 35%, transparent);
+  border-radius: 99px;
 }
