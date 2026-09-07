@@ -29,7 +29,7 @@ export function SiteHeader({
   const intro = !store;
 
   return (
-    <header className="sticky top-0 z-40 overflow-visible border-b bg-background">
+    <header className="site-header">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6">
         <div className="flex items-center gap-2">
           {store ? (

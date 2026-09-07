@@ -121,12 +121,59 @@
   * {
     @apply border-border outline-ring/50;
   }
-  body {
-    @apply bg-background text-foreground;
-  }
   html {
     @apply font-sans;
   }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.site-header {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: var(--background);
+  border-bottom: 1px solid var(--border);
+}
+
+.catalog-tabs-show,
+.catalog-tabs-hide {
+  display: inline-flex;
+  cursor: pointer;
+  align-items: center;
+  gap: 0.25rem;
+  border-radius: 9999px;
+  background: var(--muted);
+  padding: 0.375rem 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  color: var(--muted-foreground);
+}
+
+.catalog-tabs-show:hover,
+.catalog-tabs-hide:hover {
+  color: var(--foreground);
+}
+
+.catalog-tabs-extras {
+  display: contents;
+}
+
+.catalog-tabs-show {
+  display: none;
+}
+
+.catalog-tabs-nav:not(:has(> .catalog-tabs-toggle:checked)) .catalog-tabs-extras {
+  display: none;
+}
+
+.catalog-tabs-nav:not(:has(> .catalog-tabs-toggle:checked)) .catalog-tabs-show {
+  display: inline-flex;
+}
+
+.catalog-tabs-nav:not(:has(> .catalog-tabs-toggle:checked)) .catalog-tabs-hide {
+  display: none;
 }
 
 .brand-dropdown-trigger {
