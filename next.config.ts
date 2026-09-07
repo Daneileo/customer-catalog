@@ -10,7 +10,6 @@ const nextConfig: NextConfig = {
       { source: "/mishka", destination: "/manybrands-2", permanent: false },
       { source: "/mishka/search", destination: "/manybrands-2/search", permanent: false },
       { source: "/mishka/c/:id", destination: "/manybrands-2/c/:id", permanent: false },
-      { source: "/search", destination: "/manybrands-1/search", permanent: false },
       { source: "/c/:id", destination: "/manybrands-1/c/:id", permanent: false },
       { source: "/sirius", destination: "/manybrands-1", permanent: false },
       { source: "/sirius/search", destination: "/manybrands-1/search", permanent: false },
@@ -23,7 +22,8 @@ const nextConfig: NextConfig = {
       { source: "/master/mishka/search", destination: "/master/manybrands-2/search", permanent: false },
       { source: "/master/mishka/c/:id", destination: "/master/manybrands-2/c/:id", permanent: false },
       {
-        source: "/:shop(taurus|scorpio|pisces|husky|chaosmade|wwfake100|yolo66|luxury233)/item/:id",
+        source:
+          "/:shop(taurus|scorpio|pisces|husky|chaosmade|wwfake100|yolo66|luxury233|jimioptical|niuniu6688|west42|dreamremake2|jieyi168x|palmmoose|terryqiuyi|emmaluxury|godmall|hlinjewelry|pikachushop)/item/:id",
         destination: "/item/:shop/:id",
         permanent: false,
       },

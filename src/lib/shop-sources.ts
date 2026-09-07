@@ -99,6 +99,71 @@ export const SHOP_SOURCES: Record<ShopSlug, ShopSource> = {
       /prad\*a/i,
     ],
   },
+  jimioptical: {
+    slug: "jimioptical",
+    host: "jimioptical.x.yupoo.com",
+    photoUser: "jimioptical",
+    blockedCategoryPatterns: [/contact/i, /\bw2c\b/i],
+  },
+  niuniu6688: {
+    slug: "niuniu6688",
+    host: "niuniu6688.x.yupoo.com",
+    photoUser: "niuniu6688",
+    blockedCategoryPatterns: [/uncategorized/i],
+  },
+  west42: {
+    slug: "west42",
+    host: "west42.x.yupoo.com",
+    photoUser: "west42",
+    blockedCategoryPatterns: [/production plan/i],
+  },
+  dreamremake2: {
+    slug: "dreamremake2",
+    host: "dreamremake2.x.yupoo.com",
+    photoUser: "dreamremake2",
+    blockedCategoryPatterns: [/uncategorized/i],
+  },
+  jieyi168x: {
+    slug: "jieyi168x",
+    host: "jieyi168x.x.yupoo.com",
+    photoUser: "jieyi168x",
+  },
+  palmmoose: {
+    slug: "palmmoose",
+    host: "palmmoose.x.yupoo.com",
+    photoUser: "palmmoose",
+    blockedCategoryPatterns: [/uncategorized/i],
+  },
+  terryqiuyi: {
+    slug: "terryqiuyi",
+    host: "terryqiuyi.x.yupoo.com",
+    photoUser: "terryqiuyi",
+    blockedCategoryPatterns: [/qc photos/i, /\bnotice\b/i],
+  },
+  emmaluxury: {
+    slug: "emmaluxury",
+    host: "emma-luxury.x.yupoo.com",
+    photoUser: "emma-luxury",
+    blockedCategoryPatterns: [/^qc$/i],
+  },
+  godmall: {
+    slug: "godmall",
+    host: "godmall.x.yupoo.com",
+    photoUser: "godmall",
+    blockedCategoryPatterns: [/warm reminder/i],
+  },
+  hlinjewelry: {
+    slug: "hlinjewelry",
+    host: "hlinjewelry.x.yupoo.com",
+    photoUser: "hlinjewelry",
+    blockedCategoryPatterns: [/online store/i],
+  },
+  pikachushop: {
+    slug: "pikachushop",
+    host: "pikachushop.x.yupoo.com",
+    photoUser: "pikachushop",
+    blockedCategoryPatterns: [/how to buy/i],
+  },
 };
 
 export function getShopSource(slug: string): ShopSource | null {

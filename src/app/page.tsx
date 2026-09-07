@@ -18,7 +18,8 @@ export default function IntroPage() {
           whatsapp, i have EVERYTHINGGGGG
         </p>
         <p className="text-sm text-muted-foreground">
-          Pick a catalog from the tabs above to start browsing.
+          Use the search bar above to look through every catalog at once, or
+          pick a catalog tab to browse.
         </p>
         <a
           className="inline-flex text-sm font-medium underline-offset-2 hover:underline"

@@ -10,7 +10,9 @@ import {
   type ShopSource,
 } from "@/lib/shop-sources";
 import {
+  SHOP_SLUGS,
   STORES,
+  storeForShop,
   type CategoryListingMode,
   type ShopSlug,
   type StoreSlug,
@@ -617,8 +619,13 @@ export async function getStoreIndex(
   options?: CatalogFetchOptions,
 ) {
   const listingMode = categoryListingModeForStore(store);
+  const pinnedCategoryId = STORES[store].pinnedCategoryId;
   const pages = await loadStoreShops(store, (slug) =>
-    getAlbumIndex(slug, page, options),
+    pinnedCategoryId
+      ? getCategoryPage(slug, pinnedCategoryId, page, {
+          master: options?.master,
+        })
+      : getAlbumIndex(slug, page, options),
   );
   const listing = combineListings(pages, page, listingMode);
   return finalizeStoreListing(store, listing, options);
@@ -678,6 +685,28 @@ function uniqueItems(items: CatalogItem[]) {
     if (seen.has(key)) continue;
     seen.add(key);
     out.push(item);
+  }
+  return out;
+}
+
+function interleaveByShop(items: CatalogItem[]) {
+  const buckets = new Map<ShopSlug, CatalogItem[]>();
+  for (const item of items) {
+    const list = buckets.get(item.shop) ?? [];
+    list.push(item);
+    buckets.set(item.shop, list);
+  }
+  const queues = [...buckets.values()];
+  const out: CatalogItem[] = [];
+  let added = true;
+  while (added) {
+    added = false;
+    for (const queue of queues) {
+      const next = queue.shift();
+      if (!next) continue;
+      out.push(next);
+      added = true;
+    }
   }
   return out;
 }
@@ -838,6 +867,57 @@ export async function getCombinedCategory(slug: string, page = 1) {
 
 export async function searchCombined(query: string, page = 1) {
   return searchStore("manybrands-1", query, page);
+}
+
+const GLOBAL_SEARCH_PAGES = 2;
+
+export async function searchAllStores(
+  query: string,
+  page = 1,
+  options?: CatalogFetchOptions,
+): Promise<CatalogPage> {
+  const q = query.trim();
+  if (!q) {
+    return {
+      items: [],
+      page: 1,
+      pageCount: 1,
+      categories: [],
+    };
+  }
+
+  const sku = extractSku(q);
+  const settled = await Promise.allSettled(
+    SHOP_SLUGS.map((slug) => searchShopPages(slug, q, GLOBAL_SEARCH_PAGES, options)),
+  );
+  let hits = uniqueItems(
+    settled.flatMap((result) =>
+      result.status === "fulfilled" ? titleHits(result.value, q) : [],
+    ),
+  );
+
+  if (hits.length === 0 && sku && sku !== q) {
+    const skuSettled = await Promise.allSettled(
+      SHOP_SLUGS.map((slug) => searchShopPages(slug, sku, 2, options)),
+    );
+    hits = uniqueItems(
+      skuSettled.flatMap((result) =>
+        result.status === "fulfilled"
+          ? [...titleHits(result.value, q), ...titleHits(result.value, sku)]
+          : [],
+      ),
+    );
+  }
+
+  const paged = paginateSearch(interleaveByShop(hits), page);
+  return {
+    ...paged,
+    categories: [],
+  };
+}
+
+export function catalogLabelForItem(item: CatalogItem) {
+  return STORES[storeForShop(item.shop)]?.name ?? item.shop;
 }
 
 function parsePhotos($: cheerio.CheerioAPI, shop: ShopSource): CatalogPhoto[] {

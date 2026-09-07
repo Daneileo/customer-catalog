@@ -3,7 +3,7 @@
 import { useEffect, useId, useMemo, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import { brandLetter } from "@/lib/category-nav";
 import {
   catalogCategoryPath,
@@ -30,6 +30,7 @@ export function BrandNav({
   const popoverId = `brand-dropdown-${mode}-${store}-${reactId}`;
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
+  const expandId = `brand-expand-${mode}-${store}-${reactId}`;
 
   const groups = useMemo(() => {
     const map = new Map<string, Category[]>();
@@ -119,33 +120,55 @@ export function BrandNav({
   }, [pathname]);
 
   return (
-    <div className="brand-nav flex items-center gap-1">
-      <Link
-        href={catalogHome(store, mode)}
-        className={cn(
-          "rounded-full px-3 py-1.5 text-sm",
-          !activeId && !pathname.includes("/search")
-            ? "bg-foreground text-background"
-            : "bg-muted text-muted-foreground hover:text-foreground",
-        )}
-      >
-        All
-      </Link>
+    <div className="brand-nav group/brands space-y-2">
+      <input
+        id={expandId}
+        type="checkbox"
+        className="sr-only"
+      />
+      <div className="flex flex-wrap items-center gap-1">
+        <Link
+          href={catalogHome(store, mode)}
+          className={cn(
+            "rounded-full px-3 py-1.5 text-sm",
+            !activeId && !pathname.includes("/search")
+              ? "bg-foreground text-background"
+              : "bg-muted text-muted-foreground hover:text-foreground",
+          )}
+        >
+          All
+        </Link>
 
-      <button
-        ref={triggerRef}
-        type="button"
-        className={cn(
-          "brand-dropdown-trigger inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm",
-          activeId && "brand-dropdown-trigger-active",
-        )}
-        popoverTarget={popoverId}
-        popoverTargetAction="toggle"
-        aria-haspopup="listbox"
-      >
-        {active?.name || "Brands"}
-        <ChevronDown className="brand-chevron size-3.5" />
-      </button>
+        <button
+          ref={triggerRef}
+          type="button"
+          className={cn(
+            "brand-dropdown-trigger inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm",
+            activeId && "brand-dropdown-trigger-active",
+          )}
+          popoverTarget={popoverId}
+          popoverTargetAction="toggle"
+          aria-haspopup="listbox"
+        >
+          {active?.name || "Brands"}
+          <ChevronDown className="brand-chevron size-3.5" />
+        </button>
+
+        <label
+          htmlFor={expandId}
+          className="inline-flex cursor-pointer items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground group-has-[:checked]/brands:hidden"
+        >
+          Show all brands
+          <ChevronDown className="size-3.5" />
+        </label>
+        <label
+          htmlFor={expandId}
+          className="hidden cursor-pointer items-center gap-1 rounded-full bg-muted px-3 py-1.5 text-sm text-muted-foreground hover:text-foreground group-has-[:checked]/brands:inline-flex"
+        >
+          Hide brands
+          <ChevronUp className="size-3.5" />
+        </label>
+      </div>
 
       <div
         ref={panelRef}
@@ -202,6 +225,29 @@ export function BrandNav({
             </>
           )}
         </div>
+      </div>
+
+      <div className="hidden max-h-64 flex-wrap gap-1 overflow-y-auto overscroll-contain rounded-xl border bg-card p-2 group-has-[:checked]/brands:flex">
+        {categories.length === 0 ? (
+          <p className="px-2 py-3 text-sm text-muted-foreground">
+            Brands will appear when the catalog loads.
+          </p>
+        ) : (
+          categories.map((category) => (
+            <Link
+              key={category.id}
+              href={catalogCategoryPath(store, category.id, mode)}
+              className={cn(
+                "rounded-full px-3 py-1.5 text-sm",
+                activeId === category.id
+                  ? "bg-foreground text-background"
+                  : "bg-muted text-muted-foreground hover:text-foreground",
+              )}
+            >
+              {category.name}
+            </Link>
+          ))
+        )}
       </div>
     </div>
   );

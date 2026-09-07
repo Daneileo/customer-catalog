@@ -1,18 +1,17 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { BrandNav } from "@/components/brand-nav";
+import { CatalogTabs } from "@/components/catalog-tabs";
 import { CategoryMenu } from "@/components/category-menu";
 import { SearchForm } from "@/components/search-form";
 import {
   STORE_LIST,
   WHATSAPP_DISPLAY,
-  catalogHome,
   storeHome,
   whatsappLink,
   type CatalogMode,
   type StoreSlug,
 } from "@/lib/shops";
-import { cn } from "@/lib/utils";
 
 type Category = { id: string; name: string };
 
@@ -79,45 +78,12 @@ export function SiteHeader({
           )}
         </div>
 
-        <nav
-          className="flex flex-wrap gap-1"
-          aria-label="Catalogs"
-        >
-          <Link
-            href="/"
-            className={cn(
-              "rounded-full px-3 py-1.5 text-sm",
-              intro
-                ? "bg-foreground text-background"
-                : "bg-muted text-muted-foreground hover:text-foreground",
-            )}
-          >
-            Home
-          </Link>
-          {STORE_LIST.map((entry) => {
-            const active = entry.slug === store;
-            return (
-              <Link
-                key={entry.slug}
-                href={catalogHome(entry.slug, mode)}
-                className={cn(
-                  "rounded-full px-3 py-1.5 text-sm",
-                  active
-                    ? "bg-foreground text-background"
-                    : "bg-muted text-muted-foreground hover:text-foreground",
-                )}
-              >
-                {entry.name}
-              </Link>
-            );
-          })}
-        </nav>
+        <CatalogTabs store={store} mode={mode} />
+
+        <SearchForm store={store} mode={mode} />
 
         {store ? (
-          <>
-            <BrandNav store={store} categories={categories} mode={mode} />
-            <SearchForm store={store} mode={mode} />
-          </>
+          <BrandNav store={store} categories={categories} mode={mode} />
         ) : null}
       </div>
     </header>

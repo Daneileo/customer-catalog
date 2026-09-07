@@ -30,8 +30,9 @@ export function CatalogListing({
   pathname,
   query,
   mode = "storefront",
+  showCatalog = false,
 }: {
-  store: StoreSlug;
+  store?: StoreSlug;
   title: string;
   description: string;
   data: CatalogPage;
@@ -39,6 +40,7 @@ export function CatalogListing({
   query?: Record<string, string | undefined>;
   activeCategoryId?: string;
   mode?: CatalogMode;
+  showCatalog?: boolean;
 }) {
   const csv = mode === "master" ? listingCsv(data.items) : null;
 
@@ -64,6 +66,7 @@ export function CatalogListing({
       <ProductGrid
         items={data.items}
         mode={mode}
+        showCatalog={showCatalog}
         emptyTitle={
           query?.q ? `No titles match “${query.q}”` : undefined
         }

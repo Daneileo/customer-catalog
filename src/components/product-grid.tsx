@@ -1,14 +1,16 @@
 import Link from "next/link";
 import type { CatalogItem } from "@/lib/catalog";
-import { catalogItemPath, type CatalogMode } from "@/lib/shops";
+import { catalogItemPath, STORES, storeForShop, type CatalogMode } from "@/lib/shops";
 import { formatYen } from "@/lib/titles";
 
 export function ProductCard({
   item,
   mode = "storefront",
+  showCatalog = false,
 }: {
   item: CatalogItem;
   mode?: CatalogMode;
+  showCatalog?: boolean;
 }) {
   const price = formatYen(item.price);
   const original = formatYen(item.originalPrice);
@@ -45,6 +47,11 @@ export function ProductCard({
               ) : null}
             </p>
           ) : null}
+          {showCatalog ? (
+            <p className="text-[11px] font-medium text-muted-foreground">
+              {STORES[storeForShop(item.shop)]?.name ?? item.shop}
+            </p>
+          ) : null}
           <h2 className="line-clamp-2 text-sm leading-snug text-foreground/90">
             {item.title}
           </h2>
@@ -69,11 +76,13 @@ export function ProductCard({
 export function ProductGrid({
   items,
   mode = "storefront",
+  showCatalog = false,
   emptyTitle = "No items on this page.",
   emptyDescription = "Try another page, category, or search.",
 }: {
   items: CatalogItem[];
   mode?: CatalogMode;
+  showCatalog?: boolean;
   emptyTitle?: string;
   emptyDescription?: string;
 }) {
@@ -93,6 +102,7 @@ export function ProductGrid({
           key={`${item.shop}-${item.id}`}
           item={item}
           mode={mode}
+          showCatalog={showCatalog}
         />
       ))}
     </div>
