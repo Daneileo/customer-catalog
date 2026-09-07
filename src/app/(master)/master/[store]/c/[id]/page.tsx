@@ -6,30 +6,18 @@ import {
   getStoreCategory,
   type CatalogPage,
 } from "@/lib/catalog";
-import {
-  STORES,
-  catalogCategoryPath,
-  catalogHome,
-  getStore,
-} from "@/lib/shops";
+import { catalogCategoryPath, catalogHome, getStore } from "@/lib/shops";
 
 export const revalidate = 300;
+export const maxDuration = 60;
 
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ store: string; id: string }>;
 }) {
-  const { store: storeSlug, id } = await params;
-  const store = getStore(storeSlug);
-  if (!store) return { title: "Category" };
-  try {
-    const data = await getStoreCategory(store.slug, id, 1, { master: true });
-    const current = data.categories.find((category) => category.id === id);
-    return { title: current ? `${current.name} · master` : "Category" };
-  } catch {
-    return { title: "Category" };
-  }
+  const store = getStore((await params).store);
+  return { title: store ? `${store.name} · master` : "Category" };
 }
 
 export default async function MasterStoreCategoryPage({
@@ -78,8 +66,4 @@ export default async function MasterStoreCategoryPage({
       activeCategoryId={id}
     />
   );
-}
-
-export function generateStaticParams() {
-  return Object.keys(STORES).map((store) => ({ store }));
 }

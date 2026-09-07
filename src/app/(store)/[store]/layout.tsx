@@ -2,6 +2,8 @@ import { notFound } from "next/navigation";
 import { CatalogChrome } from "@/components/catalog-chrome";
 import { isStoreSlug, type StoreSlug } from "@/lib/shops";
 
+export const maxDuration = 60;
+
 export default async function StoreLayout({
   children,
   params,

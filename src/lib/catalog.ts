@@ -1,6 +1,5 @@
 import "server-only";
 
-import { unstable_cache } from "next/cache";
 import * as cheerio from "cheerio";
 import type { Element } from "domhandler";
 import {
@@ -32,8 +31,6 @@ import {
 } from "@/lib/search-match";
 
 const VIEWABLE_ITEM_CONCURRENCY = 24;
-const POPULATED_CATEGORY_CONCURRENCY = 40;
-const POPULATED_CATEGORY_CACHE_MAX = 250;
 
 function isListingItemOpenable(
   title: string,
@@ -111,76 +108,12 @@ async function filterViewableCatalogItems(
   return viewable;
 }
 
-async function categoryHasAlbums(
-  shop: ShopSource,
-  category: CatalogCategory,
-  options?: CatalogFetchOptions,
-) {
-  for (const source of category.sources) {
-    if (source.shop !== shop.slug) continue;
-    try {
-      const listing = await getCategoryPage(source.shop, source.id, 1, {
-        isSubCategory: source.isSubCategory,
-        master: options?.master,
-      });
-      if (listing.items.length > 0) return true;
-    } catch {
-      // Try the next source mapping for this category.
-    }
-  }
-  return false;
-}
-
-async function filterPopulatedCategories(
-  store: StoreSlug,
-  categories: CatalogCategory[],
-  options?: CatalogFetchOptions,
-) {
-  if (options?.master || categories.length > POPULATED_CATEGORY_CACHE_MAX) {
-    return categories;
-  }
-
-  const cacheKey = `populated-categories:${store}:${categories.length}`;
-  const populatedIds = await unstable_cache(
-    async () => {
-      const ids: string[] = [];
-      for (let i = 0; i < categories.length; i += POPULATED_CATEGORY_CONCURRENCY) {
-        const batch = categories.slice(i, i + POPULATED_CATEGORY_CONCURRENCY);
-        const checks = await Promise.all(
-          batch.map(async (category) => {
-            for (const shopSlug of STORES[store].shops) {
-              const shop = getShopSource(shopSlug);
-              if (!shop) continue;
-              if (await categoryHasAlbums(shop, category, options)) {
-                return category.id;
-              }
-            }
-            return null;
-          }),
-        );
-        ids.push(...checks.filter((id): id is string => Boolean(id)));
-      }
-      return ids;
-    },
-    [cacheKey],
-    { revalidate: 3600 },
-  )();
-
-  const allowed = new Set(populatedIds);
-  return categories.filter((category) => allowed.has(category.id));
-}
-
 async function finalizeStoreListing(
-  store: StoreSlug,
+  _store: StoreSlug,
   listing: CatalogPage,
-  options?: CatalogFetchOptions,
+  _options?: CatalogFetchOptions,
 ) {
-  const categories = await filterPopulatedCategories(
-    store,
-    listing.categories,
-    options,
-  );
-  return { ...listing, categories };
+  return listing;
 }
 
 const USER_AGENT =
@@ -281,22 +214,27 @@ function preferBig(src: string) {
 }
 
 async function fetchHtml(url: string) {
-  const res = await fetch(url, {
-    headers: {
-      "User-Agent": USER_AGENT,
-      Accept: "text/html,application/xhtml+xml",
-      "Accept-Language": "en-US,en;q=0.9",
-      Cookie: "language=en-US",
-    },
-    signal: AbortSignal.timeout(25000),
-    next: { revalidate: 300 },
-  });
+  try {
+    const res = await fetch(url, {
+      headers: {
+        "User-Agent": USER_AGENT,
+        Accept: "text/html,application/xhtml+xml",
+        "Accept-Language": "en-US,en;q=0.9",
+        Cookie: "language=en-US",
+      },
+      signal: AbortSignal.timeout(12000),
+      next: { revalidate: 300 },
+    });
 
-  if (!res.ok) {
-    throw new CatalogError(`Catalog request failed (${res.status})`);
+    if (!res.ok) {
+      throw new CatalogError(`Catalog request failed (${res.status})`);
+    }
+
+    return await res.text();
+  } catch (error) {
+    if (error instanceof CatalogError) throw error;
+    throw new CatalogError("The product feed is temporarily unavailable.");
   }
-
-  return res.text();
 }
 
 function parsePageCount($: cheerio.CheerioAPI) {
@@ -488,7 +426,20 @@ export async function getAlbumIndex(
 ) {
   const shop = getShopSource(slug);
   if (!shop) throw new CatalogError("Unknown catalog");
-  return loadListing(shop, "albums", page, options);
+  const listing = await loadListing(shop, "albums", page, options);
+  if (options?.master || page !== 1 || listing.items.length > 0) {
+    return listing;
+  }
+
+  // Customer home: Yupoo page 1 is sometimes only supplier guides.
+  let latest = listing;
+  for (let next = 2; next <= Math.min(listing.pageCount, 3); next += 1) {
+    latest = await loadListing(shop, "albums", next, options);
+    if (latest.items.length > 0) {
+      return { ...latest, page: 1, pageCount: listing.pageCount };
+    }
+  }
+  return listing;
 }
 
 export async function getCategoryPage(
@@ -631,15 +582,57 @@ export async function getStoreIndex(
   return finalizeStoreListing(store, listing, options);
 }
 
+function decodeCategoryId(value: string) {
+  try {
+    return decodeURIComponent(value).trim();
+  } catch {
+    return value.trim();
+  }
+}
+
+function findStoreCategory(categories: CatalogCategory[], rawId: string) {
+  const id = decodeCategoryId(rawId);
+  if (!id) return undefined;
+  return (
+    categories.find((entry) => entry.id === id) ||
+    categories.find((entry) =>
+      entry.sources.some((source) => source.id === id),
+    ) ||
+    categories.find((entry) => categoryKey(entry.name) === id)
+  );
+}
+
+async function loadCategoryForShop(
+  shopSlug: ShopSlug,
+  source: { id: string; isSubCategory?: boolean },
+  page: number,
+  options?: CatalogFetchOptions,
+) {
+  try {
+    return await getCategoryPage(shopSlug, source.id, page, {
+      isSubCategory: source.isSubCategory,
+      master: options?.master,
+    });
+  } catch (error) {
+    if (!(error instanceof CatalogError)) throw error;
+    return getCategoryPage(shopSlug, source.id, page, {
+      isSubCategory: !source.isSubCategory,
+      master: options?.master,
+    });
+  }
+}
+
 export async function getStoreCategory(
   store: StoreSlug,
   slug: string,
   page = 1,
   options?: CatalogFetchOptions,
 ) {
-  if (!slug) throw new CatalogError("Unknown category");
+  const id = decodeCategoryId(slug);
+  if (!id) throw new CatalogError("Unknown category");
+
   const index = await getStoreIndex(store, 1, options);
-  const category = index.categories.find((entry) => entry.id === slug);
+  const category = findStoreCategory(index.categories, id);
   if (!category) throw new CatalogError("Unknown category");
 
   const pages = await loadStoreShops(store, async (shopSlug) => {
@@ -652,23 +645,34 @@ export async function getStoreCategory(
         categories: index.categories,
       };
     }
-    const listing = await getCategoryPage(shopSlug, source.id, page, {
-      isSubCategory: source.isSubCategory,
-      master: options?.master,
-    });
-    return listing;
+    try {
+      return await loadCategoryForShop(shopSlug, source, page, options);
+    } catch {
+      return {
+        items: [],
+        page,
+        pageCount: 1,
+        categories: index.categories,
+      };
+    }
   });
 
-  const combined = combineListings(pages, page, categoryListingModeForStore(store));
-  const items = await filterViewableCatalogItems(combined.items, options);
-  const listing = await finalizeStoreListing(
-    store,
-    { ...combined, items },
-    options,
+  const combined = combineListings(
+    pages,
+    page,
+    categoryListingModeForStore(store),
   );
+  let items = combined.items;
+  try {
+    items = await filterViewableCatalogItems(combined.items, options);
+  } catch {
+    items = combined.items;
+  }
+
   return {
-    ...listing,
-    categories: listing.categories,
+    ...combined,
+    items,
+    categories: index.categories,
   };
 }
 
