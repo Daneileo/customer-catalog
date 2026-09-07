@@ -6,9 +6,10 @@ import {
   getStoreIndex,
   type CatalogPage,
 } from "@/lib/catalog";
-import { STORES, getStore, storeHome } from "@/lib/shops";
+import { getStore, storeHome } from "@/lib/shops";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export async function generateMetadata({
   params,
@@ -58,8 +59,4 @@ export default async function StoreHomePage({
       pathname={storeHome(store.slug)}
     />
   );
-}
-
-export function generateStaticParams() {
-  return Object.keys(STORES).map((store) => ({ store }));
 }

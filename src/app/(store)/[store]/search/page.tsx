@@ -6,9 +6,10 @@ import {
   searchStore,
   type CatalogPage,
 } from "@/lib/catalog";
-import { STORES, getStore, storeHome, storeSearchPath } from "@/lib/shops";
+import { getStore, storeHome, storeSearchPath } from "@/lib/shops";
 
-export const revalidate = 120;
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export async function generateMetadata({
   params,
@@ -66,8 +67,4 @@ export default async function StoreSearchPage({
       query={{ q: query }}
     />
   );
-}
-
-export function generateStaticParams() {
-  return Object.keys(STORES).map((store) => ({ store }));
 }

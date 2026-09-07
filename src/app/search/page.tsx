@@ -9,7 +9,8 @@ import {
 } from "@/lib/catalog";
 import { catalogGlobalSearchPath } from "@/lib/shops";
 
-export const revalidate = 120;
+export const dynamic = "force-dynamic";
+export const maxDuration = 60;
 
 export async function generateMetadata({
   searchParams,

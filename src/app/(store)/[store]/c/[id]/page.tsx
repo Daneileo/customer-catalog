@@ -8,7 +8,7 @@ import {
 } from "@/lib/catalog";
 import { getStore, storeCategoryPath, storeHome } from "@/lib/shops";
 
-export const revalidate = 300;
+export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function generateMetadata({
