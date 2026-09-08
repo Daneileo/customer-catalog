@@ -103,7 +103,6 @@ export const STORES: Record<StoreSlug, Store> = {
     name: "manybrands-3",
     blurb: CATALOG_BLURB,
     shops: ["chaosmade"],
-    categoryListingMode: "all",
   },
   "many-shoes-1": {
     slug: "many-shoes-1",

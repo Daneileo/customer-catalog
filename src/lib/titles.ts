@@ -1,4 +1,4 @@
-import { restoreBrands } from "@/lib/brands";
+import { decipherCopy } from "@/lib/decipher-brands";
 
 export type ParsedTitle = {
   raw: string;
@@ -24,7 +24,7 @@ function decodeEntities(value: string) {
 }
 
 export function parseProductTitle(raw: string): ParsedTitle {
-  const restored = restoreBrands(decodeEntities(raw).replace(/\s+/g, " ").trim());
+  const restored = decipherCopy(decodeEntities(raw).replace(/\s+/g, " ").trim());
   const sale = restored.match(/[￥¥]\s*~?\s*(\d+)\s*(?:⬅️|←)\s*[￥¥]?\s*(\d+)/);
   const prices = [...restored.matchAll(/[￥¥]\s*~?\s*(\d+)/g)].map((m) =>
     Number(m[1]),
@@ -94,5 +94,5 @@ export function extractHttpLinks(text: string) {
 }
 
 export function restoreCopy(text: string) {
-  return restoreBrands(decodeEntities(text).replace(/\s+/g, " ")).trim();
+  return decipherCopy(decodeEntities(text).replace(/\s+/g, " ")).trim();
 }

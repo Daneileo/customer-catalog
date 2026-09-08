@@ -87,7 +87,7 @@ export default async function MasterItemPage({
       <div className="grid gap-8 lg:grid-cols-[minmax(0,1.2fr)_minmax(18rem,0.8fr)]">
         <PhotoGallery title={item.title} photos={item.photos} />
 
-        <aside className="space-y-5 lg:sticky lg:top-24 lg:self-start">
+        <aside className="space-y-5 lg:sticky lg:top-16 lg:self-start">
           <div className="space-y-3">
             {price || original ? (
               <p className="text-2xl font-semibold tracking-tight">

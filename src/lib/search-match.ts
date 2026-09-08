@@ -1,7 +1,7 @@
-import { restoreBrands } from "@/lib/brands";
+import { decipherCopy } from "@/lib/decipher-brands";
 
 export function normalizeSearchText(value: string) {
-  return restoreBrands(value)
+  return decipherCopy(value)
     .toLowerCase()
     .replace(/['’`]/g, "")
     .replace(/[🔥⭐★☆✦]/g, "")

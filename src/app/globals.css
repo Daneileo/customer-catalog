@@ -129,12 +129,20 @@
   }
 }
 
-.site-header {
+.site-masthead {
+  background: var(--background);
+}
+
+.site-search-sticky {
   position: sticky;
   top: 0;
   z-index: 40;
   background: var(--background);
   border-bottom: 1px solid var(--border);
+}
+
+.site-brands {
+  background: var(--background);
 }
 
 .catalog-tabs-show,

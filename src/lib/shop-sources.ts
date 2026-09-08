@@ -42,6 +42,13 @@ export const SHOP_SOURCES: Record<ShopSlug, ShopSource> = {
     slug: "chaosmade",
     host: "chaosmade.x.yupoo.com",
     photoUser: "chaosmade",
+    blockedCategoryPatterns: [
+      /how to order/i,
+      /trust agent/i,
+      /on sale/i,
+      /^unbranded$/i,
+      /^no brand$/i,
+    ],
   },
   wwfake100: {
     slug: "wwfake100",

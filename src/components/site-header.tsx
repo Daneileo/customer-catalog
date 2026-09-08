@@ -29,64 +29,74 @@ export function SiteHeader({
   const intro = !store;
 
   return (
-    <header className="site-header">
-      <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6">
-        <div className="flex items-center gap-2">
-          {store ? (
-            <CategoryMenu store={store} categories={categories} mode={mode} />
-          ) : (
-            <div className="size-10 shrink-0" aria-hidden />
-          )}
-          <div className="min-w-0 flex-1">
-            <p className="font-heading text-lg font-semibold tracking-tight">
-              {intro ? "HOW TO ORDER" : current?.name}
-              {master ? " · Master" : ""}
-            </p>
-            <p className="truncate text-xs text-muted-foreground">
-              {intro
-                ? "Start here, then pick a catalog below."
-                : master
-                  ? "Local only. Prices and album links — not on the published site."
-                  : "Browse items. Photos only — no supplier links."}
-            </p>
+    <>
+      <header className="site-masthead">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-3 px-4 pt-3 pb-3 sm:px-6">
+          <div className="flex items-center gap-2">
+            {store ? (
+              <CategoryMenu store={store} categories={categories} mode={mode} />
+            ) : (
+              <div className="size-10 shrink-0" aria-hidden />
+            )}
+            <div className="min-w-0 flex-1">
+              <p className="font-heading text-lg font-semibold tracking-tight">
+                {intro ? "HOW TO ORDER" : current?.name}
+                {master ? " · Master" : ""}
+              </p>
+              <p className="truncate text-xs text-muted-foreground">
+                {intro
+                  ? "Start here, then pick a catalog below."
+                  : master
+                    ? "Local only. Prices and album links — not on the published site."
+                    : "Browse items. Photos only — no supplier links."}
+              </p>
+            </div>
+            {master && store ? (
+              <Button
+                nativeButton={false}
+                render={<Link href={storeHome(store)} />}
+                size="sm"
+                variant="outline"
+                className="shrink-0"
+              >
+                Customer catalog
+              </Button>
+            ) : (
+              <Button
+                nativeButton={false}
+                render={
+                  <a
+                    href={whatsappLink("Hi, I want to place an order.")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  />
+                }
+                size="sm"
+                className="shrink-0"
+              >
+                WhatsApp {WHATSAPP_DISPLAY}
+              </Button>
+            )}
           </div>
-          {master && store ? (
-            <Button
-              nativeButton={false}
-              render={<Link href={storeHome(store)} />}
-              size="sm"
-              variant="outline"
-              className="shrink-0"
-            >
-              Customer catalog
-            </Button>
-          ) : (
-            <Button
-              nativeButton={false}
-              render={
-                <a
-                  href={whatsappLink("Hi, I want to place an order.")}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                />
-              }
-              size="sm"
-              className="shrink-0"
-            >
-              WhatsApp {WHATSAPP_DISPLAY}
-            </Button>
-          )}
+
+          <CatalogTabs store={store} mode={mode} />
         </div>
+      </header>
 
-        <CatalogTabs store={store} mode={mode} />
-
-        <SearchForm store={store} mode={mode} />
-
-        {store ? (
-          <BrandNav store={store} categories={categories} mode={mode} />
-        ) : null}
+      <div className="site-search-sticky">
+        <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6">
+          <SearchForm store={store} mode={mode} />
+        </div>
       </div>
-    </header>
+
+      {store ? (
+        <div className="site-brands">
+          <div className="mx-auto w-full max-w-7xl px-4 pb-3 sm:px-6">
+            <BrandNav store={store} categories={categories} mode={mode} />
+          </div>
+        </div>
+      ) : null}
+    </>
   );
 }
 

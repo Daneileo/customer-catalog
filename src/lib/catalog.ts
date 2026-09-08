@@ -22,7 +22,7 @@ import {
   restoreCopy,
   sanitizeCopy,
 } from "@/lib/titles";
-import { restoreBrands } from "@/lib/brands";
+import { decipherBrandName } from "@/lib/decipher-brands";
 import { isBrandListing, sortBrandList } from "@/lib/category-nav";
 import {
   categoryFitsQuery,
@@ -262,7 +262,7 @@ function parseCategories(
     const href = $(el).attr("href") || "";
     const id = href.match(/\/categories\/(\d+)/)?.[1];
     if (!id || id === "0") return;
-    const name = restoreBrands($(el).text().replace(/\s+/g, " ").trim());
+    const name = decipherBrandName($(el).text().replace(/\s+/g, " ").trim());
     if (
       !name ||
       isHiddenCategory(name) ||
